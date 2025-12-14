@@ -21,3 +21,18 @@ foreach ([
 ] as $slug) {
     // Route::view($slug, 'pages.sandbox.' . $slug)->name($slug);
 }
+
+Route::get('/', function () {
+  return response()->json([
+    'status' => 'ok',
+    'message' => 'Sandbox root route is working',
+    'user' => auth()->check() ? auth()->user()->email : null,
+    'environment' => app()->environment(),
+  ]);
+})->name('index');
+
+Route::get('/ping', function () {
+  return 'sandbox pong';
+})->name('ping');
+
+

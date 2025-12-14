@@ -3,10 +3,6 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Cache\RateLimiting\Limit;
 
 return Application::configure(basePath: dirname(__DIR__))
   ->withRouting(
@@ -16,52 +12,70 @@ return Application::configure(basePath: dirname(__DIR__))
     channels: __DIR__ . '/../routes/channels.php',
     health: '/up',
     then: function () {
-      /*
-       |-------------------------------------------------------------
-       | Rate limiting (optional, but matches old RouteServiceProvider)
-       |-------------------------------------------------------------
-       */
-      RateLimiter::for('api', function (Request $request) {
-        return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-      });
-
-      /*
-       |-------------------------------------------------------------
-       | Auth routes under /account (Breeze routes/auth.php)
-       |-------------------------------------------------------------
-       |
-       | Your routes/auth.php currently already prefixes with 'account'
-       | in the file (from our earlier update). If you keep that prefix
-       | inside auth.php, DO NOT prefix here or you’ll get /account/account/*
-       |
-       | So you have two choices:
-       |  A) Remove prefix('account') from routes/auth.php and add it here (recommended)
-       |  B) Keep prefix in routes/auth.php and just group it with web middleware here
-       */
-
-      // Recommended: prefix here (ONLY if you remove Route::prefix('account') from routes/auth.php)
-      Route::middleware('web')
-        ->prefix('account')
-        ->group(base_path('routes/auth.php'));
-
-      /*
-       |-------------------------------------------------------------
-       | Extra web route files with centralized middleware/prefix/name
-       |-------------------------------------------------------------
-       */
-      Route::middleware('web')
-        ->group(base_path('routes/web-redirects.php'));
-
-      Route::middleware(['web', 'sandbox'])
-        ->prefix('sandbox')
-        ->name('sandbox.')
-        ->group(base_path('routes/sandbox.php'));
+      require base_path('bootstrap/routes.php');
     }
   )
   ->withMiddleware(function (Middleware $middleware): void {
-    //
+
+    /*
+     |--------------------------------------------------------------------------
+     | Middleware aliases
+     |--------------------------------------------------------------------------
+     |
+     | Aliases can be used on routes/groups like:
+     | Route::middleware(['web', 'sandbox'])->group(...)
+     |
+     */
+
+    $middleware->alias([
+      'log' => \App\Http\Middleware\Log::class,
+      'basic.auth' => \App\Http\Middleware\BasicAuth::class,
+      'sandbox' => \App\Http\Middleware\SandboxMiddleware::class,
+    ]);
+
+    /*
+     |--------------------------------------------------------------------------
+     | Middleware groups
+     |--------------------------------------------------------------------------
+     |
+     | Define custom groups similar to the old Http\Kernel.php groups.
+     | This allows you to attach a "sandbox" group without repeating
+     | multiple middleware names everywhere.
+     |
+     */
+
+    // $middleware->group('sandbox', [
+    //   'sandbox',
+    //   'basic.auth',
+    // ]);
+
+    /*
+     |--------------------------------------------------------------------------
+     | Web stack additions
+     |--------------------------------------------------------------------------
+     |
+     | Ensure our custom CSRF middleware (with webhook exemptions)
+     | is part of the web middleware stack.
+     |
+     | Note: If Laravel already includes CSRF by default in your stack,
+     | you can keep this, but avoid registering duplicate CSRF middleware
+     | if you later customize the full web stack.
+     |
+     */
+
+    $middleware->web(append: [
+      // Optional: add request tracing on all web routes
+      // Comment out if you don't want this globally.
+      \App\Http\Middleware\Log::class,
+
+      \App\Http\Middleware\VerifyCsrfToken::class,
+    ]);
+
   })
   ->withExceptions(function (Exceptions $exceptions): void {
     //
   })
   ->create();
+
+
+
