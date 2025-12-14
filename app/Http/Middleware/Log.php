@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace App\Http\Middleware;
 
@@ -9,8 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
-class Log
-{
+class Log {
   /**
    * Attach a unique identifier to each request for logging and tracing.
    *
@@ -27,8 +26,7 @@ class Log
    * We intentionally do NOT merge this value into request input,
    * as that can interfere with validation, old input, or persistence.
    */
-  public function handle(Request $request, Closure $next): Response
-  {
+  public function handle(Request $request, Closure $next): Response {
     $uuid = (string) Str::uuid();
 
     // Store on the request (safe, internal use only)

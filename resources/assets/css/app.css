@@ -3,5 +3,5 @@
 @tailwind utilities;
 
 body {
-    border: 10px solid red;
+    border: 10px dashed red;
 }

@@ -29,8 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
     $middleware->alias([
       'log' => \App\Http\Middleware\Log::class,
+      'api.auth' => \App\Http\Middleware\ApiAuth::class,
       'basic.auth' => \App\Http\Middleware\BasicAuth::class,
       'sandbox' => \App\Http\Middleware\SandboxMiddleware::class,
+      'signed' => \App\Http\Middleware\ValidateSignature::class,
     ]);
 
     /*
@@ -67,7 +69,6 @@ return Application::configure(basePath: dirname(__DIR__))
       // Optional: add request tracing on all web routes
       // Comment out if you don't want this globally.
       \App\Http\Middleware\Log::class,
-
       \App\Http\Middleware\VerifyCsrfToken::class,
     ]);
 
@@ -76,6 +77,3 @@ return Application::configure(basePath: dirname(__DIR__))
     //
   })
   ->create();
-
-
-

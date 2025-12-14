@@ -1,13 +1,11 @@
 <?php
-
 namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class SandboxMiddleware
-{
+class SandboxMiddleware {
   /**
    * Sandbox access control middleware.
    *
@@ -23,8 +21,7 @@ class SandboxMiddleware
    * The goal is to prevent accidental exposure of internal
    * sandbox or testing routes.
    */
-  public function handle(Request $request, Closure $next): Response
-  {
+  public function handle(Request $request, Closure $next): Response {
     // Optional: hide sandbox routes entirely outside local/dev
     // Uncomment if you want sandbox routes to 404 in non-dev environments
     //
@@ -43,7 +40,7 @@ class SandboxMiddleware
 
     // Allowed email allowlist (comma-separated via env)
     $allowed = config('sandbox.allowed_emails', []);
-    $email = (string) auth()->user()->email;
+    $email   = (string) auth()->user()->email;
 
     // Fail closed if allowlist is not configured
     if (empty($allowed)) {

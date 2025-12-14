@@ -1,13 +1,11 @@
 <?php
-
 namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class BasicAuth
-{
+class BasicAuth {
   /**
    * HTTP Basic Authentication middleware.
    *
@@ -24,8 +22,7 @@ class BasicAuth
    * - Fails closed if credentials are not configured
    * - Returns a Basic Auth challenge on invalid credentials
    */
-  public function handle(Request $request, Closure $next): Response
-  {
+  public function handle(Request $request, Closure $next): Response {
     // Skip Basic Auth entirely in local environment
     // (useful for local development and DX)
     if (app()->environment('local')) {
