@@ -5,6 +5,9 @@ import { globSync } from 'glob';
 export default defineConfig({
   plugins: [
     laravel({
+      // For standalone Laravel: './public'
+      // For WordPress integration with WP Laravel Loader: '../app'
+
       // publicDirectory: '../app',
       publicDirectory: './public',
       // optional, but explicit:

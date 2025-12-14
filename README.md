@@ -1,59 +1,263 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Starter Kit
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A modern Laravel 12 starter kit with authentication, organized asset structure, and developer-friendly middleware.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- ✅ Laravel 12 with Breeze authentication
+- ✅ Organized asset structure (pages, components, layouts)
+- ✅ Custom middleware (BasicAuth, Sandbox, Request Logging)
+- ✅ Vite with glob patterns for flexible asset compilation
+- ✅ Database table prefixing support
+- ✅ CSRF webhook exemptions
+- ✅ Sandbox routes with email allowlist
+- ✅ Tailwind CSS 3.x
+- ✅ Alpine.js included
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Installation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Prerequisites
 
-## Learning Laravel
+- PHP 8.2+
+- Composer
+- Node.js 18+
+- MySQL/MariaDB or PostgreSQL
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Quick Start
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. **Clone the repository**
+```bash
+   git clone https://github.com/yourusername/laravel-starter-kit.git
+   cd laravel-starter-kit
+```
 
-## Laravel Sponsors
+2. **Install dependencies**
+```bash
+   composer setup
+```
+   
+   This runs:
+   - `composer install`
+   - Copies `.env.example` to `.env`
+   - Generates application key
+   - Runs migrations
+   - Installs npm packages
+   - Builds assets
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+3. **Configure environment**
+```bash
+   # Edit .env with your database credentials
+   DB_DATABASE=your_database
+   DB_USERNAME=your_username
+   DB_PASSWORD=your_password
+```
 
-### Premium Partners
+4. **Start development server**
+```bash
+   composer dev
+```
+   
+   This runs concurrently:
+   - Laravel development server (port 8000)
+   - Queue worker
+   - Log viewer (Pail)
+   - Vite dev server (HMR)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Project Structure
+
+### Asset Organization
+```
+resources/assets/
+├── css/
+│   └── app.css          # Main stylesheet
+├── js/
+│   ├── app.js           # Main JavaScript
+│   └── bootstrap.js     # Axios & dependencies
+├── pages/               # Page-specific assets
+├── components/          # Component-specific assets
+└── layouts/             # Layout-specific assets
+```
+
+Vite automatically compiles all `.css`, `.scss`, and `.js` files in these directories.
+
+### Routes
+
+- `routes/web.php` - Main application routes
+- `routes/auth.php` - Authentication routes (login, register, etc.)
+- `routes/sandbox.php` - Protected development routes
+- `routes/api.php` - API routes
+- `routes/web-redirects.php` - URL redirects
+
+### Custom Middleware
+
+#### BasicAuth
+HTTP Basic Authentication for staging/sandbox environments.
+```php
+// Skips in local environment
+// Configure in .env:
+BASIC_AUTH_USER=admin
+BASIC_AUTH_PASS=secure_password
+```
+
+#### SandboxMiddleware
+Email-based allowlist for sandbox routes.
+```php
+// Configure allowed emails:
+SANDBOX_ALLOWED_EMAILS=user1@example.com,user2@example.com
+```
+
+#### Log
+Attaches unique UUID to each request for debugging.
+```php
+// Access in logs or responses:
+$request->attributes->get('log_uuid')
+```
+
+## Database
+
+### Table Prefixing
+
+All tables are prefixed with `laravel_` by default.
+```env
+DB_PREFIX=laravel_
+```
+
+To change the prefix, update `.env`:
+```env
+DB_PREFIX=myapp_
+```
+
+## Sandbox Routes
+
+Protected routes for development/internal tools:
+```
+/sandbox/           # Returns status info
+/sandbox/ping       # Simple ping endpoint
+```
+
+Access requires:
+1. Authentication (logged in user)
+2. Email in allowlist (production)
+3. Basic auth credentials (if configured)
+
+## Development Commands
+```bash
+# Run all development services
+composer dev
+
+# Run tests
+composer test
+
+# Code formatting
+./vendor/bin/php-cs-fixer fix
+```
+
+## Deployment
+
+### Build Assets
+```bash
+npm run build
+```
+
+### Environment Setup
+
+Ensure these are set in production:
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://yourdomain.com
+
+# Set strong credentials
+BASIC_AUTH_USER=...
+BASIC_AUTH_PASS=...
+
+# Configure mail
+MAIL_MAILER=smtp
+MAIL_HOST=...
+```
+
+## WordPress Integration (Optional)
+
+This starter kit can be integrated with WordPress using the [WP Laravel Loader Plugin](https://github.com/yourusername/wp-laravel-loader).
+
+### Setup for WordPress
+
+1. **Install in WordPress directory**
+```bash
+   # Install Laravel in: /path/to/wordpress/laravel/
+   # Public path will be: /path/to/wordpress/app/
+```
+
+2. **Update Vite configuration**
+```javascript
+   // vite.config.js
+   publicDirectory: '../app',  // Change from './public'
+```
+
+3. **Update environment**
+```env
+   ASSET_URL=https://yourdomain.com/app
+```
+
+4. **Install WP Laravel Loader plugin** in WordPress
+
+See [WP Laravel Loader documentation](https://github.com/yourusername/wp-laravel-loader) for details.
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced software licensed under the [MIT license](LICENSE).
+
+## Credits
+
+Built with:
+- [Laravel](https://laravel.com)
+- [Laravel Breeze](https://laravel.com/docs/starter-kits#breeze)
+- [Tailwind CSS](https://tailwindcss.com)
+- [Alpine.js](https://alpinejs.dev)
+- [Vite](https://vitejs.dev)
+```
+
+#### 5. **Add LICENSE File**
+
+Create `LICENSE` (MIT):
+```
+MIT License
+
+Copyright (c) 2024 [Your Name]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+#### 6. **Add .gitattributes**
+
+Create `.gitattributes` for proper language detection:
+```
+* text=auto
+
+*.blade.php linguist-language=PHP
+*.css linguist-language=CSS
+*.scss linguist-language=SCSS
+*.js linguist-language=JavaScript
+
+/tests export-ignore
+/.github export-ignore
