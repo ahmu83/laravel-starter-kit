@@ -13,15 +13,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-foreach ([
-    'axios-test',
-    'components',
-    'tailwind',
-    'test',
-] as $slug) {
-    // Route::view($slug, 'pages.sandbox.' . $slug)->name($slug);
-}
-
 Route::get('/', function () {
   return response()->json([
     'status' => 'ok',
@@ -34,5 +25,6 @@ Route::get('/', function () {
 Route::get('/ping', function () {
   return 'sandbox pong';
 })->name('ping');
+
 
 
