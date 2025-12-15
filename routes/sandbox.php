@@ -14,12 +14,18 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-  return response()->json([
+  $data = [
     'status' => 'ok',
     'message' => 'Sandbox root route is working',
     'user' => auth()->check() ? auth()->user()->email : null,
     'environment' => app()->environment(),
-  ]);
+    'routes' => [
+      'logs' => url('sandbox/logs'),
+      'queue' => url('sandbox/queue'),
+      'tinker' => url('/sandbox/tinker'),
+    ],
+  ];
+  dd($data);
 })->name('index');
 
 Route::get('/ping', function () {
