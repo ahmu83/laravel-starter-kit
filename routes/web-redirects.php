@@ -2,5 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::permanentRedirect('/test-redirect', '/welcome');
+/*
+|--------------------------------------------------------------------------
+| Web redirects
+|--------------------------------------------------------------------------
+|
+| Simple permanent redirects handled at the routing layer.
+|
+*/
+Route::middleware(['web'])->group(function () {
 
+  Route::permanentRedirect('/test-redirect', '/welcome');
+
+});

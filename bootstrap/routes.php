@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Rate limiting (replacement for RouteServiceProvider::boot)
+| Rate limiting api routes
 |--------------------------------------------------------------------------
 */
 RateLimiter::for('api', function (Request $request) {
@@ -18,43 +18,13 @@ RateLimiter::for('api', function (Request $request) {
 
 /*
 |--------------------------------------------------------------------------
-| Auth routes (/account/*)
+| Route files
 |--------------------------------------------------------------------------
-|
-| routes/auth.php MUST NOT prefix itself with 'account'
-| Prefix + middleware are applied here centrally.
-|
-*/
-Route::middleware('web')
-  ->prefix('account')
-  ->group(base_path('routes/auth.php'));
-
-/*
-|--------------------------------------------------------------------------
-| Extra web route files
+| Each file is responsible for its own prefix/name/middleware grouping.
 |--------------------------------------------------------------------------
 */
-Route::middleware('web')
-  ->group(base_path('routes/web-redirects.php'));
-
-/*
-|--------------------------------------------------------------------------
-| Sandbox routes
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['web', 'sandbox', 'basic.auth'])
-  ->prefix('sandbox')
-  ->name('sandbox.')
-  ->group(base_path('routes/sandbox.php'));
-
-/*
-|--------------------------------------------------------------------------
-| Toolbox routes
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['web'])
-  ->prefix('toolbox')
-  ->name('toolbox.')
-  ->group(base_path('routes/toolbox.php'));
-
+require base_path('routes/web-redirects.php');
+require base_path('routes/auth.php');
+require base_path('routes/toolbox.php');
+require base_path('routes/sandbox.php');
 

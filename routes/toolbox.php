@@ -4,15 +4,20 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Toolbox Routes
+| Toolbox routes (/toolbox/*)
 |--------------------------------------------------------------------------
 |
-| Here is where you can register toolbox routes for your
-| application. i.e, log-viewer, queue viewer etc.
+| Internal tooling routes such as log viewer, queue viewer, etc.
 |
 */
 
-Route::get('/', function () {
+$handlers = [];
+
+/**
+ * /toolbox route handler
+ */
+$handlers['index'] = function () {
+
   $data = [
     'status' => 'ok',
     'message' => 'Toolbox root route is working',
@@ -27,13 +32,54 @@ Route::get('/', function () {
       'tinker' => url('toolbox/tinker'),
     ],
   ];
+
   printr($data, '$data');
   dd($data);
-})->name('index');
 
-Route::get('/ping', function () {
-  return 'sandbox pong';
-})->name('ping');
+};
 
+/**
+ * /toolbox/ping route handler
+ */
+$handlers['ping'] = function () {
+  return 'toolbox pong';
+};
 
+/**
+ * /toolbox/queues route handler
+ */
+$handlers['queues'] = function () {
+  require base_path('routes/vendor/vantage.php');
+};
 
+Route::middleware(['web', 'toolbox.access'])
+
+// Route::middleware(['web', 'can:accessToolbox'])
+  ->prefix('toolbox')
+  ->group(function () use ($handlers) {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Toolbox named routes (toolbox.*)
+    |--------------------------------------------------------------------------
+    */
+    Route::name('toolbox.')->group(function () use ($handlers) {
+
+      Route::get('/', $handlers['index'])->name('index');
+      Route::get('/ping', $handlers['ping'])->name('ping');
+
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Vantage (Queue Monitor)
+    |--------------------------------------------------------------------------
+    |
+    | IMPORTANT:
+    | Do not put Vantage inside the "toolbox." name group or its internal
+    | route('vantage.*') calls will break.
+    |
+    */
+    Route::prefix('queues')->group($handlers['queues']);
+
+  });

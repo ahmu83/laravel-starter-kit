@@ -13,14 +13,18 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Authentication routes
+| Authentication routes (/account/*)
 |--------------------------------------------------------------------------
 |
-| These routes are prefixed with /account and use the "web" middleware
-| from bootstrap/app.php.
+| This file owns the /account prefix.
+| The "web" middleware is applied here so bootstrap can just include files.
 |
 */
-Route::middleware('guest')->group(function () {
+
+$groups = [];
+
+$groups['guest'] = function () {
+
   Route::get('register', [RegisteredUserController::class, 'create'])
     ->name('register');
 
@@ -42,9 +46,11 @@ Route::middleware('guest')->group(function () {
 
   Route::post('reset-password', [NewPasswordController::class, 'store'])
     ->name('password.store');
-});
 
-Route::middleware('auth')->group(function () {
+};
+
+$groups['auth'] = function () {
+
   Route::get('verify-email', EmailVerificationPromptController::class)
     ->name('verification.notice');
 
@@ -52,7 +58,10 @@ Route::middleware('auth')->group(function () {
     ->middleware(['signed', 'throttle:6,1'])
     ->name('verification.verify');
 
-  Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+  Route::post(
+    'email/verification-notification',
+    [EmailVerificationNotificationController::class, 'store']
+  )
     ->middleware('throttle:6,1')
     ->name('verification.send');
 
@@ -66,5 +75,15 @@ Route::middleware('auth')->group(function () {
 
   Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
-});
+
+};
+
+Route::middleware(['web'])
+  ->prefix('account')
+  ->group(function () use ($groups) {
+
+    Route::middleware(['guest'])->group($groups['guest']);
+    Route::middleware(['auth'])->group($groups['auth']);
+
+  });
 

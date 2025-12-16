@@ -4,16 +4,18 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Sandbox Routes
+| Sandbox routes (/sandbox/*)
 |--------------------------------------------------------------------------
 |
-| Here is where you can register sandbox routes for your application. These
-| routes are loaded in the bootstrap/app.php file.
-| They have a "sandbox" middleware added to the group.
+| Isolated sandbox endpoints for testing and debugging.
+| Protected by sandbox + basic auth middleware.
 |
 */
 
-Route::get('/', function () {
+$handlers = [];
+
+$handlers['index'] = function () {
+
   $data = [
     'status' => 'ok',
     'message' => 'Sandbox root route is working',
@@ -21,12 +23,26 @@ Route::get('/', function () {
     'environment' => app()->environment(),
     'routes' => [],
   ];
+
   dd($data);
-})->name('index');
 
-Route::get('/ping', function () {
+};
+
+$handlers['ping'] = function () {
+
   return 'sandbox pong';
-})->name('ping');
 
+};
+
+Route::middleware(['web', 'sandbox.access', 'basic.auth'])
+// Route::middleware(['web', 'can:accessToolbox'])
+  ->prefix('sandbox')
+  ->name('sandbox.')
+  ->group(function () use ($handlers) {
+
+    Route::get('/', $handlers['index'])->name('index');
+    Route::get('/ping', $handlers['ping'])->name('ping');
+
+  });
 
 
