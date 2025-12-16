@@ -39,7 +39,7 @@ return [
     |
     */
 
-    'route_path' => 'sandbox/logs',
+    'route_path' => 'toolbox/log-viewer',
     // 'route_path' => 'log-viewer',
 
     /*

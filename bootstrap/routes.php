@@ -47,4 +47,14 @@ Route::middleware(['web', 'sandbox', 'basic.auth'])
   ->name('sandbox.')
   ->group(base_path('routes/sandbox.php'));
 
+/*
+|--------------------------------------------------------------------------
+| Toolbox routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['web'])
+  ->prefix('toolbox')
+  ->name('toolbox.')
+  ->group(base_path('routes/toolbox.php'));
+
 

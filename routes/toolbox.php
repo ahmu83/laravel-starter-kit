@@ -4,23 +4,30 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Sandbox Routes
+| Toolbox Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register sandbox routes for your application. These
-| routes are loaded in the bootstrap/app.php file.
-| They have a "sandbox" middleware added to the group.
+| Here is where you can register toolbox routes for your
+| application. i.e, log-viewer, queue viewer etc.
 |
 */
 
 Route::get('/', function () {
   $data = [
     'status' => 'ok',
-    'message' => 'Sandbox root route is working',
+    'message' => 'Toolbox root route is working',
+    'true' => true,
+    'false' => false,
+    'null' => null,
     'user' => auth()->check() ? auth()->user()->email : null,
     'environment' => app()->environment(),
-    'routes' => [],
+    'routes' => [
+      'logs' => url('toolbox/log-viewer'),
+      'queue' => url('toolbox/queues'),
+      'tinker' => url('toolbox/tinker'),
+    ],
   ];
+  printr($data, '$data');
   dd($data);
 })->name('index');
 
