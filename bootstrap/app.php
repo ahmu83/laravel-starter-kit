@@ -24,6 +24,11 @@ return Application::configure(basePath: dirname(__DIR__))
       'signed' => \App\Http\Middleware\ValidateSignature::class,
       'sandbox.access' => \App\Http\Middleware\SandboxAccess::class,
       'toolbox.access' => \App\Http\Middleware\SandboxAccess::class,
+
+      'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+      'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+      'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+
     ]);
 
     /*
