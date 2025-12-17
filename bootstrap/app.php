@@ -29,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
       'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
       'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
 
+      'sync.wp.user' => \App\Http\Middleware\SyncWpUser::class,
+
     ]);
 
     /*
