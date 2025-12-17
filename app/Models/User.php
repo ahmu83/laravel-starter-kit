@@ -2,50 +2,53 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable
 {
-  use HasFactory, Notifiable, HasRoles;
+  use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-      'name',
-      'email',
-      'password',
-      'wp_user_id',
-      'wp_roles',
-    ];
+  protected $fillable = [
+    'name',
+    'email',
+    'password',
+    'wp_user_id',
+    'wp_roles',
+    'wp_capabilities',
+    'wp_primary_role',
+  ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+  protected $casts = [
+    'email_verified_at' => 'datetime',
+    'password' => 'hashed',
+    'wp_roles' => 'array',
+    'wp_capabilities' => 'array',
+    'wp_user_id' => 'integer',
+  ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-      return [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'wp_roles' => 'array',
-        'wp_user_id' => 'integer',
-      ];
-    }
+  /**
+   * Check if user has a WordPress capability
+   */
+  public function hasWpCapability(string $capability): bool
+  {
+    return ($this->wp_capabilities[$capability] ?? false) === true;
+  }
+
+  /**
+   * Check if user has a WordPress role
+   */
+  public function hasWpRole(string $role): bool
+  {
+    return in_array($role, $this->wp_roles ?? []);
+  }
+
+  /**
+   * Check if user is WordPress administrator
+   */
+  public function isWpAdmin(): bool
+  {
+    return $this->hasWpRole('administrator');
+  }
 }

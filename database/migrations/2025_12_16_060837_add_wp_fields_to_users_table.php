@@ -11,6 +11,8 @@ return new class extends Migration
     Schema::table('users', function (Blueprint $table) {
       $table->unsignedBigInteger('wp_user_id')->nullable()->unique()->after('id');
       $table->json('wp_roles')->nullable()->after('wp_user_id');
+      $table->json('wp_capabilities')->nullable()->after('wp_roles');
+      $table->string('wp_primary_role')->nullable()->after('wp_capabilities');
     });
   }
 
@@ -18,7 +20,7 @@ return new class extends Migration
   {
     Schema::table('users', function (Blueprint $table) {
       $table->dropUnique(['wp_user_id']);
-      $table->dropColumn(['wp_user_id', 'wp_roles']);
+      $table->dropColumn(['wp_user_id', 'wp_roles', 'wp_capabilities', 'wp_primary_role']);
     });
   }
 };

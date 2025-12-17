@@ -1,11 +1,9 @@
-// app/Services/WordPressUserSync.php
 <?php
 
 namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class WordPressUserSync
 {
@@ -16,9 +14,6 @@ class WordPressUserSync
         $this->prefix = config('database.connections.wordpress.prefix');
     }
 
-    /**
-     * Sync a WordPress user to Laravel by ID
-     */
     public function syncUserById(int $wpUserId): ?User
     {
         $wpUser = $this->getWpUser($wpUserId);
@@ -30,9 +25,6 @@ class WordPressUserSync
         return $this->syncUser($wpUser);
     }
 
-    /**
-     * Sync a WordPress user to Laravel by email
-     */
     public function syncUserByEmail(string $email): ?User
     {
         $wpUser = $this->getWpUserByEmail($email);
@@ -44,37 +36,36 @@ class WordPressUserSync
         return $this->syncUser($wpUser);
     }
 
-    /**
-     * Sync WordPress user data to Laravel
-     */
     protected function syncUser(object $wpUser): User
     {
+        $capabilities = $this->getWpUserCapabilities($wpUser->ID);
+        $roles = array_keys(array_filter($capabilities, fn($val, $key) =>
+            !str_contains($key, '_') && $val === true,
+            ARRAY_FILTER_USE_BOTH
+        ));
+
         return User::updateOrCreate(
             ['wp_user_id' => $wpUser->ID],
             [
                 'name' => $wpUser->display_name,
                 'email' => $wpUser->user_email,
-                'password' => $wpUser->user_pass, // Already hashed by WP
+                'password' => $wpUser->user_pass,
                 'email_verified_at' => now(),
-                'wp_roles' => $this->getWpUserRoles($wpUser->ID),
+                'wp_roles' => $roles,                    // ["administrator"]
+                'wp_capabilities' => $capabilities,       // {"manage_options": true, ...}
+                'wp_primary_role' => $roles[0] ?? null,  // "administrator"
             ]
         );
     }
 
-    /**
-     * Get WordPress user by ID
-     */
     protected function getWpUser(int $wpUserId): ?object
     {
         return DB::connection('wordpress')
-            ->table('users') // Laravel will automatically add the prefix
+            ->table('users')
             ->where('ID', $wpUserId)
             ->first();
     }
 
-    /**
-     * Get WordPress user by email
-     */
     protected function getWpUserByEmail(string $email): ?object
     {
         return DB::connection('wordpress')
@@ -84,9 +75,9 @@ class WordPressUserSync
     }
 
     /**
-     * Get WordPress user roles
+     * Get WordPress user capabilities (includes roles + individual permissions)
      */
-    protected function getWpUserRoles(int $wpUserId): array
+    protected function getWpUserCapabilities(int $wpUserId): array
     {
         $meta = DB::connection('wordpress')
             ->table('usermeta')
@@ -100,10 +91,6 @@ class WordPressUserSync
 
         $capabilities = maybe_unserialize($meta);
 
-        if (!is_array($capabilities)) {
-            return [];
-        }
-
-        return array_keys(array_filter($capabilities));
+        return is_array($capabilities) ? $capabilities : [];
     }
 }
