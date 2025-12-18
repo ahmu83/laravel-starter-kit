@@ -27,4 +27,5 @@ require base_path('routes/web-redirects.php');
 require base_path('routes/auth.php');
 require base_path('routes/toolbox.php');
 require base_path('routes/sandbox.php');
+require base_path('routes/webhooks.php');
 
