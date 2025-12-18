@@ -20,8 +20,8 @@
       $emailRegisterEnabled = config('social.email_register_enabled', true);
     @endphp
 
-    {{-- <fieldset {{ !$emailRegisterEnabled ? 'disabled' : '' }} class="{{ !$emailRegisterEnabled ? 'opacity-50 pointer-events-none' : '' }}"> --}}
-    <fieldset>
+    <fieldset {{ !$emailRegisterEnabled ? 'disabled' : '' }} class="{{ !$emailRegisterEnabled ? 'opacity-50 pointer-events-none' : '' }}">
+    {{-- <fieldset> --}}
 
       <!-- Name -->
       <div>

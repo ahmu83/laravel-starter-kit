@@ -23,8 +23,8 @@
       $emailLoginEnabled = config('social.email_login_enabled', true);
     @endphp
 
-    {{-- <fieldset {{ !$emailLoginEnabled ? 'disabled' : '' }} class="{{ !$emailLoginEnabled ? 'opacity-50 pointer-events-none' : '' }}"> --}}
-    <fieldset>
+    <fieldset {{ !$emailLoginEnabled ? 'disabled' : '' }} class="{{ !$emailLoginEnabled ? 'opacity-50 pointer-events-none' : '' }}">
+    {{-- <fieldset> --}}
 
       <!-- Email Address -->
       <div>
