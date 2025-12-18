@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,6 +51,17 @@ Route::prefix('account')->group(function () {
     Route::delete('profile', [ProfileController::class, 'destroy'])
       ->name('profile.destroy');
   });
+});
+
+Route::middleware(['web'])->group(function () {
+
+  // Social auth routes
+  Route::get('auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
+    ->name('social.redirect');
+
+  Route::get('auth/{provider}/callback', [SocialAuthController::class, 'callback'])
+    ->name('social.callback');
+
 });
 
 

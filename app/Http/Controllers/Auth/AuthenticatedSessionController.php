@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -24,6 +23,13 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // Check if email login is enabled
+        if (!config('social.email_login_enabled', true)) {
+            return back()->withErrors([
+                'email' => 'Login with email is currently disabled. Please use a social login provider.'
+            ]);
+        }
+
         $request->authenticate();
 
         $request->session()->regenerate();

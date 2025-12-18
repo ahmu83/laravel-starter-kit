@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -24,11 +23,16 @@ class RegisteredUserController extends Controller
 
     /**
      * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
+        // Check if email registration is enabled
+        if (!config('social.email_register_enabled', true)) {
+            return back()->withErrors([
+                'email' => 'Registration with email is currently disabled. Please use a social login provider.'
+            ]);
+        }
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],

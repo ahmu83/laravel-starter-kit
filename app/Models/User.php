@@ -1,13 +1,11 @@
 <?php
-
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class User extends Authenticatable
-{
+class User extends Authenticatable {
   use HasFactory, Notifiable;
 
   protected $fillable = [
@@ -18,37 +16,37 @@ class User extends Authenticatable
     'wp_roles',
     'wp_capabilities',
     'wp_primary_role',
+    'social_provider',    // Updated
+    'social_provider_id', // Updated
+    'social_avatar_url',  // Updated
   ];
 
   protected $casts = [
     'email_verified_at' => 'datetime',
-    'password' => 'hashed',
-    'wp_roles' => 'array',
-    'wp_capabilities' => 'array',
-    'wp_user_id' => 'integer',
+    'password'          => 'hashed',
+    'wp_roles'          => 'array',
+    'wp_capabilities'   => 'array',
+    'wp_user_id'        => 'integer',
   ];
 
   /**
    * Check if user has a WordPress capability
    */
-  public function hasWpCapability(string $capability): bool
-  {
+  public function hasWpCapability(string $capability): bool {
     return ($this->wp_capabilities[$capability] ?? false) === true;
   }
 
   /**
    * Check if user has a WordPress role
    */
-  public function hasWpRole(string $role): bool
-  {
+  public function hasWpRole(string $role): bool {
     return in_array($role, $this->wp_roles ?? []);
   }
 
   /**
    * Check if user is WordPress administrator
    */
-  public function isWpAdmin(): bool
-  {
+  public function isWpAdmin(): bool {
     return $this->hasWpRole('administrator');
   }
 }
