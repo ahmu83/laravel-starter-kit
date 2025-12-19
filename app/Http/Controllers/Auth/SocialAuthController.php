@@ -7,6 +7,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
+use App\Services\WpUserSync;
+
 class SocialAuthController extends Controller {
   /**
    * Redirect to provider
@@ -68,6 +70,20 @@ class SocialAuthController extends Controller {
     if (! $user) {
       return redirect()->route('login')
         ->withErrors(['error' => $this->getErrorMessage('account_exists', $provider)]);
+    }
+
+    // Sync Laravel user -> WP user + update wp_* columns on Laravel user
+    try {
+      app(WpUserSync::class, ['laravelUser' => $user])->sync();
+    } catch (\Throwable $e) {
+      // Decide if you want to fail open (login anyway) or fail closed.
+      // For now, fail open:
+      logger()->warning('WP user sync failed during social auth', [
+        'user_id' => $user->id,
+        'email' => $user->email,
+        'provider' => $provider,
+        'error' => $e->getMessage(),
+      ]);
     }
 
     // Log the user in
@@ -148,3 +164,4 @@ class SocialAuthController extends Controller {
     return $message;
   }
 }
+

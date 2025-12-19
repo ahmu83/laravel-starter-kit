@@ -4,92 +4,84 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
-class WordPressUserSync
-{
-    protected string $prefix;
+class WordPressUserSync {
+  protected string $prefix;
 
-    public function __construct()
-    {
-        $this->prefix = config('database.connections.wordpress.prefix');
+  public function __construct() {
+    $this->prefix = config('database.connections.wordpress.prefix');
+  }
+
+  public function syncUserById(int $wpUserId): ?User {
+    $wpUser = $this->getWpUser($wpUserId);
+
+    if (! $wpUser) {
+      return null;
     }
 
-    public function syncUserById(int $wpUserId): ?User
-    {
-        $wpUser = $this->getWpUser($wpUserId);
+    return $this->syncUser($wpUser);
+  }
 
-        if (!$wpUser) {
-            return null;
-        }
+  public function syncUserByEmail(string $email): ?User {
+    $wpUser = $this->getWpUserByEmail($email);
 
-        return $this->syncUser($wpUser);
+    if (! $wpUser) {
+      return null;
     }
 
-    public function syncUserByEmail(string $email): ?User
-    {
-        $wpUser = $this->getWpUserByEmail($email);
+    return $this->syncUser($wpUser);
+  }
 
-        if (!$wpUser) {
-            return null;
-        }
+  protected function syncUser(object $wpUser): User {
+    $capabilities = $this->getWpUserCapabilities($wpUser->ID);
+    $roles        = array_keys(array_filter($capabilities, fn($val, $key) =>
+      ! str_contains($key, '_') && $val === true,
+      ARRAY_FILTER_USE_BOTH
+    ));
 
-        return $this->syncUser($wpUser);
+    return User::updateOrCreate(
+      ['wp_user_id' => $wpUser->ID],
+      [
+        'name'              => $wpUser->display_name,
+        'email'             => $wpUser->user_email,
+        'password'          => $wpUser->user_pass,
+        'email_verified_at' => now(),
+        'wp_roles'          => $roles,            // ["administrator"]
+        'wp_capabilities'   => $capabilities,     // {"manage_options": true, ...}
+        'wp_primary_role'   => $roles[0] ?? null, // "administrator"
+      ]
+    );
+  }
+
+  protected function getWpUser(int $wpUserId): ?object {
+    return DB::connection('wordpress')
+      ->table('users')
+      ->where('ID', $wpUserId)
+      ->first();
+  }
+
+  protected function getWpUserByEmail(string $email): ?object {
+    return DB::connection('wordpress')
+      ->table('users')
+      ->where('user_email', $email)
+      ->first();
+  }
+
+  /**
+   * Get WordPress user capabilities (includes roles + individual permissions)
+   */
+  protected function getWpUserCapabilities(int $wpUserId): array {
+    $meta = DB::connection('wordpress')
+      ->table('usermeta')
+      ->where('user_id', $wpUserId)
+      ->where('meta_key', $this->prefix . 'capabilities')
+      ->value('meta_value');
+
+    if (! $meta) {
+      return [];
     }
 
-    protected function syncUser(object $wpUser): User
-    {
-        $capabilities = $this->getWpUserCapabilities($wpUser->ID);
-        $roles = array_keys(array_filter($capabilities, fn($val, $key) =>
-            !str_contains($key, '_') && $val === true,
-            ARRAY_FILTER_USE_BOTH
-        ));
+    $capabilities = maybe_unserialize($meta);
 
-        return User::updateOrCreate(
-            ['wp_user_id' => $wpUser->ID],
-            [
-                'name' => $wpUser->display_name,
-                'email' => $wpUser->user_email,
-                'password' => $wpUser->user_pass,
-                'email_verified_at' => now(),
-                'wp_roles' => $roles,                    // ["administrator"]
-                'wp_capabilities' => $capabilities,       // {"manage_options": true, ...}
-                'wp_primary_role' => $roles[0] ?? null,  // "administrator"
-            ]
-        );
-    }
-
-    protected function getWpUser(int $wpUserId): ?object
-    {
-        return DB::connection('wordpress')
-            ->table('users')
-            ->where('ID', $wpUserId)
-            ->first();
-    }
-
-    protected function getWpUserByEmail(string $email): ?object
-    {
-        return DB::connection('wordpress')
-            ->table('users')
-            ->where('user_email', $email)
-            ->first();
-    }
-
-    /**
-     * Get WordPress user capabilities (includes roles + individual permissions)
-     */
-    protected function getWpUserCapabilities(int $wpUserId): array
-    {
-        $meta = DB::connection('wordpress')
-            ->table('usermeta')
-            ->where('user_id', $wpUserId)
-            ->where('meta_key', $this->prefix . 'capabilities')
-            ->value('meta_value');
-
-        if (!$meta) {
-            return [];
-        }
-
-        $capabilities = maybe_unserialize($meta);
-
-        return is_array($capabilities) ? $capabilities : [];
-    }
+    return is_array($capabilities) ? $capabilities : [];
+  }
 }

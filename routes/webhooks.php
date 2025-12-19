@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['web'])->prefix('webhooks')->group(function () {
+Route::middleware(['web'])->prefix('webhook')->group(function () {
 
   /*
   |--------------------------------------------------------------------------

@@ -4,23 +4,27 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-  public function up(): void
-  {
+return new class extends Migration {
+  public function up(): void {
     Schema::table('users', function (Blueprint $table) {
-      $table->unsignedBigInteger('wp_user_id')->nullable()->unique()->after('id');
+
+      $table->unsignedBigInteger('wp_user_id')->nullable()->index()->after('id');
+
       $table->json('wp_roles')->nullable()->after('wp_user_id');
-      $table->json('wp_capabilities')->nullable()->after('wp_roles');
-      $table->string('wp_primary_role')->nullable()->after('wp_capabilities');
+
+      $table->string('wp_user_login', 60)->nullable()->after('wp_roles');
+
     });
   }
 
-  public function down(): void
-  {
+  public function down(): void {
     Schema::table('users', function (Blueprint $table) {
-      $table->dropUnique(['wp_user_id']);
-      $table->dropColumn(['wp_user_id', 'wp_roles', 'wp_capabilities', 'wp_primary_role']);
+      $table->dropIndex(['wp_user_id']);
+      $table->dropColumn([
+        'wp_user_id',
+        'wp_roles',
+        'wp_user_login',
+      ]);
     });
   }
 };

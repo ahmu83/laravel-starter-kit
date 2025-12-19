@@ -76,7 +76,7 @@ return [
     |
     */
 
-    'timezone' => null,
+    'timezone' => 'America/New_York',
 
     /*
     |--------------------------------------------------------------------------
@@ -86,7 +86,8 @@ return [
     |
     */
 
-    'datetime_format' => 'Y-m-d H:i:s',
+    // 'datetime_format' => 'Y-m-d H:i:s',
+    'datetime_format' => 'M d Y h:i A',
 
     /*
     |--------------------------------------------------------------------------
