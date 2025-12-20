@@ -18,8 +18,8 @@ class User extends Authenticatable {
 
     // WordPress sync fields
     'wp_user_id',
-    'wp_user_login',
     'wp_roles',
+    'wp_user_login',
 
     // Social auth
     'social_provider',

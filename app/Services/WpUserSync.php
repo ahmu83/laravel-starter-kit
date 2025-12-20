@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Synchronizes a Laravel user with a WordPress user.
@@ -501,4 +502,43 @@ class WpUserSync
 
     return $value;
   }
+
+
+  /**
+   * Log the user into WordPress
+   */
+  public function login(): bool
+  {
+    if (! $this->wpUserId) {
+      Log::warning('[WPLL] WP login skipped: wp_user_id missing', [
+        'laravel_user_id' => $this->laravelUser->id,
+      ]);
+      return false;
+    }
+
+    if (
+      ! function_exists('wp_set_current_user') ||
+      ! function_exists('wp_set_auth_cookie')
+    ) {
+      Log::warning('[WPLL] WP login skipped: WordPress auth functions unavailable');
+      return false;
+    }
+
+    wp_set_current_user($this->wpUserId);
+    wp_set_auth_cookie($this->wpUserId, true, is_ssl());
+
+    /**
+     * Let WP know a login just happened
+     */
+    do_action('wp_login', get_userdata($this->wpUserId)->user_login, get_userdata($this->wpUserId));
+
+    Log::info('[WPLL] WordPress user logged in', [
+      'wp_user_id' => $this->wpUserId,
+      'laravel_user_id' => $this->laravelUser->id,
+    ]);
+
+    return true;
+  }
+
 }
+

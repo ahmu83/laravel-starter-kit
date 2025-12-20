@@ -2,28 +2,20 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Webhook\WpUserWebhookController;
 
 /*
 |--------------------------------------------------------------------------
 | Webhook Routes
 |--------------------------------------------------------------------------
 |
-| Webhook endpoints for third-party services (Stripe, GitHub, etc.)
-| These routes are excluded from CSRF protection in VerifyCsrfToken middleware.
-|
-| Prefix: /webhooks
-| Middleware: web
-| Note: Always verify webhook signatures/secrets for security!
+| Prefix: /webhook
+| CSRF: excluded via VerifyCsrfToken (webhook/*)
+| Auth: api.auth (X-API-KEY)
 |
 */
 
-Route::middleware(['web'])->prefix('webhook')->group(function () {
-
-  /*
-  |--------------------------------------------------------------------------
-  | Webhook Test Endpoint
-  |--------------------------------------------------------------------------
-  */
+Route::prefix('webhook')->group(function () {
 
   Route::get('/test', function (Request $request) {
     return response()->json([
@@ -35,6 +27,16 @@ Route::middleware(['web'])->prefix('webhook')->group(function () {
     ]);
   })->name('webhook.test');
 
+  /*
+  |--------------------------------------------------------------------------
+  | WordPress → Laravel User Sync Webhook
+  |--------------------------------------------------------------------------
+  */
+  Route::post('/wp/user-event', [WpUserWebhookController::class, 'handle'])
+    ->middleware(['api.auth'])
+    ->name('webhook.wp.user_event');
+
+  Route::get('/wp/user-event', [WpUserWebhookController::class, 'test'])
+    ->name('webhook.wp.user_event.test');
+
 });
-
-

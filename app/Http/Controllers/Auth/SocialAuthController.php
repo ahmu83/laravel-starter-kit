@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
-
+use Illuminate\Support\Facades\Log;
 use App\Services\WpUserSync;
 
 class SocialAuthController extends Controller {
@@ -74,7 +74,12 @@ class SocialAuthController extends Controller {
 
     // Sync Laravel user -> WP user + update wp_* columns on Laravel user
     try {
-      app(WpUserSync::class, ['laravelUser' => $user])->sync();
+      // app(WpUserSync::class, ['laravelUser' => $user])->sync();
+      $WpUserSync = app(\App\Services\WpUserSync::class, [
+        'laravelUser' => $user
+      ]);
+      $WpUserSync->sync();
+      $WpUserSync->login();
     } catch (\Throwable $e) {
       // Decide if you want to fail open (login anyway) or fail closed.
       // For now, fail open:
