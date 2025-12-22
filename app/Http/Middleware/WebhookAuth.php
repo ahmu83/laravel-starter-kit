@@ -10,10 +10,10 @@ class WebhookAuth {
   public function handle(
     Request $request,
     Closure $next,
-    string $secretConfigKey = 'api_secrets.webhook_default',
-    string $headerName = 'X-Webhook-Signature'
+    string $configKey = 'api_secrets.webhook_default',
+    string $headerName = 'X-API-KEY'
   ): Response {
-    return app(VerifyHmacSignature::class)
-      ->handle($request, $next, $secretConfigKey, $headerName);
+    return app(VerifyApiKey::class)
+      ->handle($request, $next, $configKey, $headerName);
   }
 }

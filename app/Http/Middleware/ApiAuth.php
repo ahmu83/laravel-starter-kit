@@ -10,10 +10,10 @@ class ApiAuth {
   public function handle(
     Request $request,
     Closure $next,
-    string $secretConfigKey = 'api_secrets.api_default',
-    string $headerName = 'X-API-Signature'
+    string $configKey = 'api_secrets.api_default',
+    string $headerName = 'X-API-KEY'
   ): Response {
-    return app(VerifyHmacSignature::class)
-      ->handle($request, $next, $secretConfigKey, $headerName);
+    return app(VerifyApiKey::class)
+      ->handle($request, $next, $configKey, $headerName);
   }
 }

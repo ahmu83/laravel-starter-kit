@@ -18,19 +18,33 @@ return Application::configure(basePath: dirname(__DIR__))
   ->withMiddleware(function (Middleware $middleware): void {
 
     $middleware->alias([
+      /**
+       * Utility / infrastructure
+       */
       'log' => \App\Http\Middleware\Log::class,
-
       'basic.auth' => \App\Http\Middleware\BasicAuth::class,
 
-      'verify.hmac' => \App\Http\Middleware\VerifyHmacSignature::class,
+      /**
+       * API key–based authentication (static secret)
+       */
       'api.auth' => \App\Http\Middleware\ApiAuth::class,
       'webhook.auth' => \App\Http\Middleware\WebhookAuth::class,
 
-      'signed' => \App\Http\Middleware\ValidateSignature::class,
+      /**
+       * HMAC signature–based authentication (signed body)
+       */
+      'api.signature' => \App\Http\Middleware\VerifyApiSignature::class,
+      'webhook.signature' => \App\Http\Middleware\VerifyWebhookSignature::class,
 
+      /**
+       * Sandbox / tooling
+       */
       'sandbox.access' => \App\Http\Middleware\SandboxAccess::class,
       'toolbox.access' => \App\Http\Middleware\SandboxAccess::class,
 
+      /**
+       * WordPress integration
+       */
       'wp.can' => \App\Http\Middleware\CheckWpCapability::class,
       'sync.wp.user' => \App\Http\Middleware\SyncWpUser::class,
     ]);

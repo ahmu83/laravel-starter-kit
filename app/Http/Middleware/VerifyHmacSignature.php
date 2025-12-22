@@ -68,6 +68,14 @@ class VerifyHmacSignature {
 
     $secret = (string) config($secretConfigKey);
 
+    log_info('VerifyHmacSignature@verifySignature', [
+      '$request->header($headerName)' => $request->header($headerName),
+      '$signature' => $signature,
+      '$secret' => $secret,
+      '$secretConfigKey' => $secretConfigKey,
+      '$headerName' => $headerName,
+    ]);
+
     if ($secret === '' || $signature === '') {
       return false;
     }
