@@ -21,17 +21,17 @@ use Symfony\Component\HttpFoundation\Response;
  *   using a timing-safe comparison.
  *
  * Configuration:
- * - Secrets are stored in config/api_secrets.php
+ * - Secrets are stored in config/api_keys.php
  * - The middleware accepts a config key pointing to the secret:
  *
- *     webhook.auth:api_secrets.webhook_wp_event
+ *     webhook.auth:api_keys.webhook_wp_event
  *
  * - The signature header name can also be overridden:
  *
- *     webhook.auth:api_secrets.webhook_wp_event,X-Webhook-Signature
+ *     webhook.auth:api_keys.webhook_wp_event,X-Webhook-Signature
  *
  * Defaults:
- * - Secret config key: api_secrets.default
+ * - Secret config key: api_keys.default
  * - Header name: X-API-Signature
  *
  * Supported features:
@@ -49,7 +49,7 @@ class VerifyHmacSignature {
   public function handle(
     Request $request,
     Closure $next,
-    string $secretConfigKey = 'api_secrets.default',
+    string $secretConfigKey = 'api_keys.default',
     string $headerName = 'X-API-Signature'
   ): Response {
     if (! $this->verifySignature($request, $secretConfigKey, $headerName)) {

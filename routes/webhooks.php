@@ -34,13 +34,13 @@ Route::prefix('webhook')->middleware(['webhook.signature'])->group(function () {
     */
     Route::post('/wp/user-event', [WpUserWebhookController::class, 'handle'])
       ->withoutMiddleware('webhook.signature')
-      ->middleware(['webhook.signature:api_secrets.webhook_wp_event'])
+      ->middleware(['webhook.signature:api_keys.webhook_wp_event'])
       ->name('webhook.wp.user_event');
 
     // Test route (still protected by group-level secret)
     Route::get('/test', [WpUserWebhookController::class, 'test'])
       ->withoutMiddleware('webhook.signature')
-      ->middleware('webhook.signature:api_secrets.webhook_wp_event')
+      ->middleware('webhook.signature:api_keys.webhook_wp_event')
       ->name('webhook.test');
 
   });

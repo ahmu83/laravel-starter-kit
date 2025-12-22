@@ -10,7 +10,7 @@ class VerifyApiSignature {
   public function handle(
     Request $request,
     Closure $next,
-    string $secretConfigKey = 'api_secrets.api_default',
+    string $secretConfigKey = 'api_keys.default',
     string $headerName = 'X-API-Signature'
   ): Response {
     return app(VerifyHmacSignature::class)

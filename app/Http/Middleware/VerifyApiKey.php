@@ -10,7 +10,7 @@ class VerifyApiKey {
   public function handle(
     Request $request,
     Closure $next,
-    string $configKey = 'api_secrets.api_default',
+    string $configKey = 'api_keys.default',
     string $headerName = 'X-API-KEY'
   ): Response {
     $provided = (string) $request->header($headerName);

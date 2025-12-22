@@ -10,7 +10,7 @@ class WebhookAuth {
   public function handle(
     Request $request,
     Closure $next,
-    string $configKey = 'api_secrets.webhook_default',
+    string $configKey = 'api_keys.webhook_default',
     string $headerName = 'X-API-KEY'
   ): Response {
     return app(VerifyApiKey::class)
