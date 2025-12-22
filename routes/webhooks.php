@@ -11,32 +11,36 @@ use App\Http\Controllers\Webhook\WpUserWebhookController;
 |
 | Prefix: /webhook
 | CSRF: excluded via VerifyCsrfToken (webhook/*)
-| Auth: api.auth (X-API-KEY)
+| Auth: HMAC signature (verify.hmac)
 |
 */
 
-Route::prefix('webhook')->group(function () {
+Route::prefix('webhook')->middleware(['webhook.auth'])->group(function () {
 
-  Route::get('/test', function (Request $request) {
-    return response()->json([
-      'status' => 'success',
-      'message' => 'Webhook received',
-      'headers' => $request->headers->all(),
-      'payload' => $request->all(),
-      'timestamp' => now()->toISOString(),
-    ]);
-  })->name('webhook.test');
+    Route::get('/test', function (Request $request) {
+      return response()->json([
+        'status' => 'success',
+        'message' => 'Webhook received',
+        'headers' => $request->headers->all(),
+        'payload' => $request->all(),
+        'timestamp' => now()->toISOString(),
+      ]);
+    })->name('webhook.test');
 
-  /*
-  |--------------------------------------------------------------------------
-  | WordPress → Laravel User Sync Webhook
-  |--------------------------------------------------------------------------
-  */
-  Route::post('/wp/user-event', [WpUserWebhookController::class, 'handle'])
-    ->middleware(['api.auth'])
-    ->name('webhook.wp.user_event');
+    /*
+    |--------------------------------------------------------------------------
+    | WordPress → Laravel User Sync Webhook
+    |--------------------------------------------------------------------------
+    */
+    Route::post('/wp/user-event', [WpUserWebhookController::class, 'handle'])
+      ->withoutMiddleware('webhook.auth')
+      ->middleware('webhook.auth:api_secrets.webhook_wp_event')
+      ->name('webhook.wp.user_event');
 
-  Route::get('/wp/user-event', [WpUserWebhookController::class, 'test'])
-    ->name('webhook.wp.user_event.test');
+    // Test route (still protected by group-level secret)
+    Route::get('/test', [WpUserWebhookController::class, 'test'])
+      ->withoutMiddleware('webhook.auth')
+      ->middleware('webhook.auth:api_secrets.webhook_wp_event')
+      ->name('webhook.test');
 
-});
+  });

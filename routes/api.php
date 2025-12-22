@@ -38,16 +38,9 @@ Route::get('/test', function () {
   ]);
 });
 
-/*
-|--------------------------------------------------------------------------
-| Authenticated API Routes
-|--------------------------------------------------------------------------
-| Requires Sanctum authentication
-*/
+Route::middleware('api.auth')->group(function () {
 
-Route::middleware('auth:sanctum')->group(function () {
-
-  Route::get('/user', function (Request $request) {
+  Route::get('/create-user-test', function (Request $request) {
     return response()->json([
       'status' => 'success',
       'data'   => $request->user(),
@@ -56,21 +49,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
-/*
-|--------------------------------------------------------------------------
-| Protected API Routes (API Key Authentication)
-|--------------------------------------------------------------------------
-| Requires API key via X-API-KEY header
-*/
 
-Route::middleware('api.auth')->group(function () {
 
-  Route::get('/protected', function () {
-    return response()->json([
-      'status'    => 'success',
-      'message'   => 'You have access to this protected endpoint!',
-      'timestamp' => now()->toISOString(),
-    ]);
-  });
-
-});

@@ -6,12 +6,12 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class ApiAuth {
+class WebhookAuth {
   public function handle(
     Request $request,
     Closure $next,
-    string $secretConfigKey = 'api_secrets.api_default',
-    string $headerName = 'X-API-Signature'
+    string $secretConfigKey = 'api_secrets.webhook_default',
+    string $headerName = 'X-Webhook-Signature'
   ): Response {
     return app(VerifyHmacSignature::class)
       ->handle($request, $next, $secretConfigKey, $headerName);

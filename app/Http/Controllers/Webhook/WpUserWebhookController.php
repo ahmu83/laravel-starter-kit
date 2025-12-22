@@ -8,7 +8,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WpUserWebhookController extends Controller {
+  public function test(Request $request) {
+    echo 123;
+  }
+
   public function handle(Request $request) {
+    log_info('WpUserWebhookController@handle test...');
     $data = $this->getValidatedRequestData($request);
 
     $user = null;
