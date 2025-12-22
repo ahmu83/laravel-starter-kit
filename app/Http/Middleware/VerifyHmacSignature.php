@@ -66,31 +66,14 @@ class VerifyHmacSignature {
     $signature = trim((string) $request->header($headerName));
     $signature = preg_replace('/^sha256=/i', '', $signature);
 
-    // echo "\$secretConfigKey: $secret";exit;
-
     $secret = (string) config($secretConfigKey);
-
-    // echo "\$secret: $secret";exit;
-    // dd($secret);
-
-    $payload  = $request->getContent();
-    $expected = hash_hmac('sha256', $payload, $secret);
-
-    log_info('VerifyHmacSignature@debug', [
-      'headerName' => $headerName,
-      'headerValue' => $request->header($headerName),
-      '$allHeaders' => $request->header(),
-      'signature_len' => strlen($signature),
-      'expected_len' => strlen($expected),
-      'signature_start' => substr($signature, 0, 16),
-      'expected_start' => substr($expected, 0, 16),
-      'payload_len' => strlen($payload),
-      'payload_sha256' => hash('sha256', $payload),
-    ]);
 
     if ($secret === '' || $signature === '') {
       return false;
     }
+
+    $payload  = $request->getContent();
+    $expected = hash_hmac('sha256', $payload, $secret);
 
     return hash_equals($expected, $signature);
   }
