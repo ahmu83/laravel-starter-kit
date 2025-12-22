@@ -510,7 +510,7 @@ class WpUserSync
   public function login(): bool
   {
     if (! $this->wpUserId) {
-      Log::warning('[WPLL] WP login skipped: wp_user_id missing', [
+      log_info('WpUserSync@login WP login skipped: wp_user_id missing', [
         'laravel_user_id' => $this->laravelUser->id,
       ]);
       return false;
@@ -520,7 +520,7 @@ class WpUserSync
       ! function_exists('wp_set_current_user') ||
       ! function_exists('wp_set_auth_cookie')
     ) {
-      Log::warning('[WPLL] WP login skipped: WordPress auth functions unavailable');
+      log_info('WpUserSync@login WP login skipped: WordPress auth functions unavailable');
       return false;
     }
 
@@ -532,7 +532,7 @@ class WpUserSync
      */
     do_action('wp_login', get_userdata($this->wpUserId)->user_login, get_userdata($this->wpUserId));
 
-    Log::info('[WPLL] WordPress user logged in', [
+    log_info('WpUserSync@login WordPress user logged in', [
       'wp_user_id' => $this->wpUserId,
       'laravel_user_id' => $this->laravelUser->id,
     ]);
