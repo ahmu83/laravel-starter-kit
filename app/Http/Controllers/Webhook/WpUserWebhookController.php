@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WpUserWebhookController extends Controller {
+
   public function test(Request $request) {
     echo 123;
   }
 
   public function handle(Request $request) {
-    log_info('WpUserWebhookController@handle test...');
     $data = $this->getValidatedRequestData($request);
 
     $user = null;
@@ -92,7 +92,7 @@ class WpUserWebhookController extends Controller {
       'password'      => bcrypt(Str::random(40)),
     ]);
 
-    Log::info('[WPLL] Created Laravel user from WP webhook', [
+    log_info('WpUserWebhookController@createUser Created Laravel user from WP webhook', [
       'user_id'    => $user->id,
       'wp_user_id' => $user->wp_user_id,
     ]);
