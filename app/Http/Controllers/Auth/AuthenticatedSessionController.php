@@ -44,6 +44,11 @@ class AuthenticatedSessionController extends Controller
     {
         Auth::guard('web')->logout();
 
+        // Log out WordPress user if WordPress functions are available
+        if (function_exists('wp_logout')) {
+            wp_logout();
+        }
+
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();

@@ -27,4 +27,3 @@ Route::get('/account', function () {
     ? redirect()->route('dashboard')
     : redirect()->route('login');
 })->name('account.index');
-
