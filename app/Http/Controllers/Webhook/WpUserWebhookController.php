@@ -1,144 +1,146 @@
 <?php
-namespace App\Http\Controllers\Webhook;
+namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
-class WpUserWebhookController extends Controller {
+class WpUserWebhookController extends Controller
+{
+  public function handle(Request $request)
+  {
+    $event = $request->input('event');
 
-  public function test(Request $request) {
-    echo 123;
-  }
-
-  public function handle(Request $request) {
-    $data = $this->getValidatedRequestData($request);
-
-    $user = null;
-
-    if (! empty($data['laravel_user_id'])) {
-      $user = User::query()->find((int) $data['laravel_user_id']);
+    // Route to appropriate handler based on event type
+    if ($event === 'profile_update') {
+      return $this->handleProfileUpdate($request);
     }
 
-    if (! $user) {
-      $user = User::query()
-        ->where('wp_user_id', (int) $data['wp_user_id'])
-        ->first();
-    }
-
-    if (! $user) {
-      $user = $this->createUser($data);
-    } else {
-      $this->updateUser($user, $data);
+    if ($event === 'user_logout') {
+      return $this->handleUserLogout($request);
     }
 
     return response()->json([
-      'status'  => 'ok',
-      'message' => 'User synced',
+      'success' => false,
+      'message' => 'Unknown event type',
+    ], 400);
+  }
+
+  /**
+   * Handle profile_update event from WordPress
+   */
+  protected function handleProfileUpdate(Request $request)
+  {
+    $data = $request->validate([
+      'event' => ['required', 'string'],
+      'wp_user_id' => ['required', 'integer'],
+      'wp_user_login' => ['nullable', 'string', 'max:60'],
+      'wp_roles' => ['nullable', 'array'],
+      'wp_roles.*' => ['string'],
+      'laravel_user_id' => ['nullable', 'integer'],
+      'occurred_at' => ['nullable', 'string'],
+    ]);
+
+    // Prefer an explicit Laravel user link if WP has it stored.
+    $user = null;
+    if (!empty($data['laravel_user_id'])) {
+      $user = User::query()->find($data['laravel_user_id']);
+    }
+
+    // Otherwise, find by wp_user_id if previously linked.
+    if (!$user) {
+      $user = User::query()->where('wp_user_id', (int) $data['wp_user_id'])->first();
+    }
+
+    // If we can't find the user, accept the event but do nothing (for now).
+    if (!$user) {
+      return response()->json([
+        'ok' => true,
+        'note' => 'user-not-found',
+      ], 202);
+    }
+
+    $wpRoles = $data['wp_roles'] ?? null;
+    if (is_array($wpRoles)) {
+      $wpRoles = array_values(array_unique(array_map('strval', $wpRoles)));
+    }
+
+    $user->forceFill([
+      'wp_user_id' => (int) $data['wp_user_id'],
+      'wp_user_login' => $data['wp_user_login'] ?? $user->wp_user_login,
+      'wp_roles' => $wpRoles ?? $user->wp_roles,
+    ])->save();
+
+    return response()->json([
+      'ok' => true,
       'user_id' => $user->id,
     ]);
   }
 
-  private function getValidatedRequestData(Request $request): array {
-    return $request->validate([
-      'event'           => ['required', 'string'],
-      'wp_user_id'      => ['required', 'integer'],
-
-      // Lookup helper (optional)
+  /**
+   * Handle user_logout event from WordPress
+   *
+   * Invalidates ALL sessions for the user across all devices
+   */
+  protected function handleUserLogout(Request $request)
+  {
+    $data = $request->validate([
+      'event' => ['required', 'string'],
+      'wp_user_id' => ['required', 'integer'],
       'laravel_user_id' => ['nullable', 'integer'],
-
-      // Data we care about
-      'wp_roles'        => ['nullable', 'array'],
-      'wp_roles.*'      => ['string'],
-
-      // May be sent, but we will not update these for existing users
-      'wp_user_login'   => ['nullable', 'string', 'max:60'],
-      'email'           => ['nullable', 'string', 'max:255'],
-
-      // Name sources
-      'name'            => ['nullable', 'string', 'max:255'],
-      'first_name'      => ['nullable', 'string', 'max:255'],
-      'last_name'       => ['nullable', 'string', 'max:255'],
-
-      'occurred_at'     => ['nullable', 'string'],
-    ]);
-  }
-
-  private function createUser(array $data): User {
-    $email = trim((string) ($data['email'] ?? ''));
-    if ($email === '') {
-      // Your table requires email, so creation must have it.
-      abort(422, 'Email is required to create a Laravel user.');
-    }
-
-    $name = $this->resolveFullName($data);
-    if ($name === '') {
-      $name = 'WP User #' . (int) $data['wp_user_id'];
-    }
-
-    $user = User::query()->create([
-      'wp_user_id'    => (int) $data['wp_user_id'],
-      'wp_roles'      => $data['wp_roles'] ?? [],
-
-      // Set these only on create (per your preference)
-      'wp_user_login' => $data['wp_user_login'] ?? null,
-      'email'         => $email,
-
-      'name'          => $name,
-
-      // Random password so they can't log in unless you later allow it
-      'password'      => bcrypt(Str::random(40)),
+      'wp_user_login' => ['nullable', 'string'],
+      'email' => ['nullable', 'email'],
+      'occurred_at' => ['nullable', 'string'],
     ]);
 
-    log_info('WpUserWebhookController@createUser Created Laravel user from WP webhook', [
-      'user_id'    => $user->id,
-      'wp_user_id' => $user->wp_user_id,
+    // Try to find user by Laravel ID first
+    $user = null;
+    if (!empty($data['laravel_user_id'])) {
+      $user = User::query()->find($data['laravel_user_id']);
+    }
+
+    // Otherwise, find by wp_user_id if previously linked
+    if (!$user) {
+      $user = User::query()->where('wp_user_id', (int) $data['wp_user_id'])->first();
+    }
+
+    // Fallback to email if provided
+    if (!$user && !empty($data['email'])) {
+      $user = User::query()->where('email', $data['email'])->first();
+    }
+
+    // If we can't find the user, log it and return
+    if (!$user) {
+      Log::warning('User logout webhook: User not found', [
+        'laravel_user_id' => $data['laravel_user_id'] ?? null,
+        'wp_user_id' => $data['wp_user_id'],
+        'email' => $data['email'] ?? null,
+      ]);
+
+      return response()->json([
+        'ok' => true,
+        'note' => 'user-not-found',
+      ], 202);
+    }
+
+    // Delete ALL sessions for this user from the database
+    $deletedCount = DB::table('sessions')
+      ->where('user_id', $user->id)
+      ->delete();
+
+    Log::info('User logged out from WordPress - invalidated Laravel sessions', [
+      'user_id' => $user->id,
+      'email' => $user->email,
+      'wp_user_id' => $data['wp_user_id'],
+      'sessions_deleted' => $deletedCount,
     ]);
 
-    // Ensure roles/name stay consistent with update logic too
-    $this->updateUser($user, $data);
-
-    return $user;
-  }
-
-  private function updateUser(User $user, array $data): void {
-    $updates = [];
-
-    // Keep WP linkage synced
-    $updates['wp_user_id'] = (int) $data['wp_user_id'];
-
-    if (array_key_exists('wp_roles', $data)) {
-      $updates['wp_roles'] = is_array($data['wp_roles']) ? $data['wp_roles'] : [];
-    }
-
-    $name = $this->resolveFullName($data);
-    if ($name !== '') {
-      $updates['name'] = $name;
-    }
-
-    // Intentionally NOT updating for existing users:
-    // - wp_user_login
-    // - email
-
-    if (empty($updates)) {
-      return;
-    }
-
-    $user->forceFill($updates)->save();
-  }
-
-  private function resolveFullName(array $data): string {
-    $name = trim((string) ($data['name'] ?? ''));
-
-    if ($name !== '') {
-      return $name;
-    }
-
-    $first = trim((string) ($data['first_name'] ?? ''));
-    $last  = trim((string) ($data['last_name'] ?? ''));
-
-    return trim($first . ' ' . $last);
+    return response()->json([
+      'ok' => true,
+      'sessions_deleted' => $deletedCount,
+      'user_id' => $user->id,
+    ]);
   }
 }
