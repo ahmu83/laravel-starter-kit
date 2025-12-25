@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Controllers\Webhooks;
+namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
