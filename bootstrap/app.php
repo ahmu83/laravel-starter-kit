@@ -43,17 +43,11 @@ return Application::configure(basePath: dirname(__DIR__))
       'toolbox.access' => \App\Http\Middleware\SandboxAccess::class,
 
       /**
-       * WordPress integration
-       */
-      // 'wp.can' => \App\Http\Middleware\CheckWpCapability::class,
-      'sync.wp.user' => \App\Http\Middleware\SyncWpUser::class,
-
-      /**
-       * WordPress roles / capabilities (single-check semantics)
+       * WordPress roles / capabilities
        *
        * Route::get('/admin', function () {
        *   // ...
-       * })->middleware(['auth', 'has.wp.role:administrator']);
+       * })->middleware(['auth', 'has.wp.role:administrator|subscriber']);
        *
        * Route::get('/settings', function () {
        *   // ...
