@@ -58,6 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
     // Optional: attach request tracing to all web routes
     $middleware->web(append: [
       \App\Http\Middleware\Log::class,
+      \App\Http\Middleware\SyncWordPressAuth::class,
     ]);
 
     // Replace the default CSRF middleware with your customized one
