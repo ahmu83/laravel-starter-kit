@@ -10,7 +10,7 @@ class TestController extends Controller {
   private string $wp_user_email    = 'ahmu83@gmail.com';
   private string $wp_laravel_email = 'ahmu83@gmail.com';
 
-  public function handler_index(Request $request) {
+  public function handler_test(Request $request) {
     // Laravel login status
     $laravel_logged_in = Auth::check();
 
@@ -172,7 +172,7 @@ class TestController extends Controller {
     ]);
   }
 
-  public function handler_proxiedUrl(Request $request) {
+  public function handler_proxied_url(Request $request) {
 
     dd([
         'request_full_url' => $request->fullUrl(),

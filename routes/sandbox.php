@@ -31,14 +31,17 @@ $handlers['index'] = function () {
 
 };
 
-$handlers['test'] = [TestController::class, 'handler_test'];
-$handlers['test']['proxied-url'] = [TestController::class, 'proxiedUrl'];
-
 $handlers['ping'] = function () {
 
   return 'sandbox pong';
 
 };
+
+$handlers['test'] = [TestController::class, 'handler_test'];
+$handlers['test-proxied-url'] = [TestController::class, 'handler_proxied_url'];
+
+
+
 
 Route::middleware(['web', 'sandbox.access', 'basic.auth'])
 // Route::middleware(['web', 'can:accessToolbox'])
@@ -50,7 +53,7 @@ Route::middleware(['web', 'sandbox.access', 'basic.auth'])
     Route::get('/ping', $handlers['ping'])->name('ping');
 
     Route::get( '/test', $handlers['test'] )->name('test');
-    Route::get( '/test/proxied-url', $handlers['test']['proxied-url'] )->name('test.proxied-url');
+    Route::get( '/test/proxied-url', $handlers['test-proxied-url'] )->name('test.proxied-url');
 
   });
 
