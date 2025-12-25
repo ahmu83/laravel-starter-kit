@@ -71,6 +71,7 @@ Each public hostname must be explicitly routed to the tunnel.
 ```bash
 cloudflared tunnel route dns devraa-local dvc-laravel-starter-kit-test.devraa.com
 cloudflared tunnel route dns devraa-local amazingfactshome-test.devraa.com
+cloudflared tunnel route dns devraa-local wp-dvc-laravel-starter-kit-test.devraa.com
 ```
 
 Notes:
