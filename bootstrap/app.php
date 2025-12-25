@@ -45,8 +45,26 @@ return Application::configure(basePath: dirname(__DIR__))
       /**
        * WordPress integration
        */
-      'wp.can' => \App\Http\Middleware\CheckWpCapability::class,
+      // 'wp.can' => \App\Http\Middleware\CheckWpCapability::class,
       'sync.wp.user' => \App\Http\Middleware\SyncWpUser::class,
+
+      /**
+       * WordPress roles / capabilities (single-check semantics)
+       *
+       * Route::get('/admin', function () {
+       *   // ...
+       * })->middleware(['auth', 'has.wp.role:administrator']);
+       *
+       * Route::get('/settings', function () {
+       *   // ...
+       * })->middleware(['auth', 'has.wp.capability:manage_options']);
+       *
+       * For "admin OR editor" or multiple caps, stack middleware
+       * or implement explicit logic in your controller/policy.
+       */
+      'has.wp.role'       => \App\Http\Middleware\HasWpRole::class,
+      'has.wp.capability' => \App\Http\Middleware\HasWpCapability::class,
+
     ]);
 
     /*

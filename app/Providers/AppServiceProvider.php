@@ -48,6 +48,83 @@ class AppServiceProvider extends ServiceProvider {
       return in_array((string) $user->email, $allowed, true);
     });
 
+
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | WordPress-based authorization
+    |--------------------------------------------------------------------------
+    |
+    | These gates delegate to the User model helpers, which use wp_user_id
+    | to check roles/capabilities against the WordPress side.
+    |
+    | Semantics match WordPress:
+    |   - One role per check
+    |   - One capability per check
+    |
+    | Usage examples:
+    |
+    | --- Inside controllers (recommended) ---
+    |
+    |   // Require administrator role
+    |   $this->authorize('wp-role', 'administrator');
+    |
+    |   // Require capability (manage settings)
+    |   $this->authorize('wp-capability', 'manage_options');
+    |
+    |
+    | --- Manual checks ---
+    |
+    |   if (Gate::denies('wp-role', 'editor')) {
+    |       abort(403);
+    |   }
+    |
+    |   if (Gate::allows('wp-capability', 'edit_posts')) {
+    |       // show editor-only controls
+    |   }
+    |
+    |
+    | --- In policies ---
+    |
+    |   public function update(User $user)
+    |   {
+    |       return Gate::forUser($user)->allows('wp-capability', 'edit_posts');
+    |   }
+    |
+    |
+    | --- When middleware is better ---
+    |
+    |   // Protect an entire route
+    |   ->middleware(['auth', 'has.wp.role:administrator'])
+    |
+    | Use gates when authorization is contextual / runtime.
+    | Use middleware when authorization is structural / per-route.
+    |
+    */
+
+    Gate::define('wp-role', function ($user, string $role): bool {
+      if (! $user || ! method_exists($user, 'hasWpRole')) {
+        return false;
+      }
+
+      return $user->hasWpRole($role);
+    });
+
+    Gate::define('wp-capability', function ($user, string $capability): bool {
+      if (! $user || ! method_exists($user, 'hasWpCapability')) {
+        return false;
+      }
+
+      return $user->hasWpCapability($capability);
+    });
+
+
+
+
+
+
     /*
     |--------------------------------------------------------------------------
     | Optional: super-admin override
