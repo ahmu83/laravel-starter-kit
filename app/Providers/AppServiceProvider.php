@@ -2,6 +2,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider {
@@ -61,5 +62,30 @@ class AppServiceProvider extends ServiceProvider {
     //   }
     //   return null;
     // });
+
+    $this->maybeApplyProxiedAppUrl();
+
+  }
+
+  private function maybeApplyProxiedAppUrl(): void {
+    // Either via config:
+    $proxiedMode = (bool) config('app.url_proxied');
+    // or directly: $proxiedMode = filter_var(env('APP_URL_PROXIED', false), FILTER_VALIDATE_BOOLEAN);
+
+    if (! $proxiedMode) {
+      return;
+    }
+
+    $appUrl = config('app.url');
+    if (empty($appUrl)) {
+      return;
+    }
+
+    // This is the key: force URL generator root to APP_URL
+    URL::forceRootUrl($appUrl);
+
+    if (str_starts_with($appUrl, 'https://')) {
+      URL::forceScheme('https');
+    }
   }
 }

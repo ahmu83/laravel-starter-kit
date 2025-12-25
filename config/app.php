@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'url_proxied' => env('APP_URL_PROXIED', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
