@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Sandbox\TestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,6 +31,8 @@ $handlers['index'] = function () {
 
 };
 
+$handlers['test'] = [TestController::class, 'index'];
+
 $handlers['ping'] = function () {
 
   return 'sandbox pong';
@@ -42,6 +47,7 @@ Route::middleware(['web', 'sandbox.access', 'basic.auth'])
 
     Route::get('/', $handlers['index'])->name('index');
     Route::get('/ping', $handlers['ping'])->name('ping');
+    Route::get('/test', $handlers['test'])->name('test');
 
   });
 
