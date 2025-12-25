@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Http\Controllers\Test\TestController;
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -27,3 +29,13 @@ Route::get('/account', function () {
     ? redirect()->route('dashboard')
     : redirect()->route('login');
 })->name('account.index');
+
+
+/**
+ * Test route
+ */
+Route::get('/test', [TestController::class, 'index']);
+
+
+
+
