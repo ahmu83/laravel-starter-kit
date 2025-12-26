@@ -346,7 +346,7 @@ class AppServiceProvider extends ServiceProvider {
    */
   protected function maybeApplyProxiedAppUrl(): void {
     // Either via config:
-    $proxiedMode = (bool) config('app.url_proxied');
+    $proxiedMode = (bool) config('app.app_url_proxied');
     // or directly: $proxiedMode = filter_var(env('APP_URL_PROXIED', false), FILTER_VALIDATE_BOOLEAN);
 
     if (! $proxiedMode) {
