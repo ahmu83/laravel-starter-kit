@@ -1,117 +1,97 @@
 <?php
+
 namespace App\Console\Commands;
 
+use DateTime;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
-class LogsView extends Command {
+class LogsView extends Command
+{
   /**
-   * --lines  : Number of lines to show (default 200)
-   * --file   : Specific log file name (default: latest)
-   * --grep   : Filter lines by keyword (case-insensitive)
-   * --newest : Show newest entries first
-   * --group  : Group lines into entries starting with [YYYY-MM-DD HH:MM:SS]
+   * The name and signature of the console command.
+   *
+   * --lines : Number of lines to show (default 100)
+   * --file  : Specific log file (default: latest)
+   * --grep  : Filter lines by keyword (case-insensitive)
    */
   protected $signature = 'logs:view
-    {--lines=200 : Number of lines to display}
+    {--lines=100 : Number of lines to display}
     {--file= : Specific log file name}
-    {--grep= : Filter output by keyword}
-    {--newest : Show newest first}
-    {--group : Group lines into log entries}';
+    {--grep= : Filter output by keyword}';
 
-  protected $description = 'View Laravel logs in a readable, terminal-friendly way (production-safe)';
+  protected $description = 'View Laravel logs in a readable terminal format';
 
-  public function handle(): int {
+  public function handle(): int
+  {
     $logsPath = storage_path('logs');
 
     if (! is_dir($logsPath)) {
-      $this->error('Logs directory does not exist: ' . $logsPath);
+      $this->error('Logs directory does not exist.');
       return self::FAILURE;
     }
 
-    $logFile = $this->resolveLogFile($logsPath);
+    $file = $this->option('file');
 
-    if (! $logFile) {
+    if ($file) {
+      $logFile = $logsPath . '/' . $file;
+    } else {
+      $files = collect(glob($logsPath . '/*.log'))
+        ->sortByDesc(fn ($f) => filemtime($f))
+        ->values();
+
+      if ($files->isEmpty()) {
+        $this->error('No log files found.');
+        return self::FAILURE;
+      }
+
+      $logFile = $files->first();
+    }
+
+    if (! file_exists($logFile)) {
+      $this->error("Log file not found: {$logFile}");
       return self::FAILURE;
     }
 
-    $lines = max(1, (int) $this->option('lines'));
+    $lines = (int) $this->option('lines');
     $grep  = $this->option('grep');
 
     $this->info('Log file: ' . basename($logFile));
-    $this->line(str_repeat('-', 60));
+    $this->hr();
 
-    $contentLines = $this->tailFile($logFile, $lines);
+    $content = $this->tailFile($logFile, $lines);
 
     if ($grep) {
-      $needle       = Str::lower($grep);
-      $contentLines = collect($contentLines)
-        ->filter(fn($line) => Str::contains(Str::lower($line), $needle))
+      $content = collect($content)
+        ->filter(fn ($line) => Str::contains(Str::lower($line), Str::lower($grep)))
         ->values()
         ->all();
     }
 
-    if ($this->option('group')) {
-      $entries = $this->groupEntries($contentLines);
-
-      if ($this->option('newest')) {
-        $entries = array_reverse($entries);
-      }
-
-      foreach ($entries as $entryLines) {
-        $this->renderEntry($entryLines);
-      }
-
-      return self::SUCCESS;
-    }
-
-    if ($this->option('newest')) {
-      $contentLines = array_reverse($contentLines);
-    }
-
-    foreach ($contentLines as $line) {
+    foreach ($content as $line) {
       $this->outputLine($line);
     }
 
     return self::SUCCESS;
   }
 
-  private function resolveLogFile(string $logsPath): ?string {
-    $file = $this->option('file');
-
-    if ($file) {
-      $path = $logsPath . '/' . ltrim($file, '/');
-
-      if (! file_exists($path)) {
-        $this->error("Log file not found: {$path}");
-        return null;
-      }
-
-      return $path;
-    }
-
-    $files = collect(glob($logsPath . '/*.log'))
-      ->sortByDesc(fn($f) => @filemtime($f) ?: 0)
-      ->values();
-
-    if ($files->isEmpty()) {
-      $this->error('No log files found in: ' . $logsPath);
-      return null;
-    }
-
-    return $files->first();
+  protected function hr(int $width = 70): void
+  {
+    $this->line('<fg=gray>' . str_repeat('─', $width) . '</>');
   }
 
   /**
    * Efficiently read last N lines from a file.
    */
-  protected function tailFile(string $file, int $lines): array {
-    $fp = @fopen($file, 'r');
+  protected function tailFile(string $file, int $lines): array
+  {
+    $buffer = '';
+    $fp = fopen($file, 'r');
+
     if (! $fp) {
       return [];
     }
 
-    $buffer = '';
     fseek($fp, 0, SEEK_END);
     $position = ftell($fp);
 
@@ -124,109 +104,71 @@ class LogsView extends Command {
 
     fclose($fp);
 
-    $parts = explode("\n", trim($buffer));
-    return array_slice($parts, -$lines);
+    return array_slice(explode("\n", trim($buffer)), -$lines);
   }
 
   /**
-   * Group lines into entries starting with a timestamp line like:
-   * [2025-12-27 01:12:19] local.ERROR: ...
+   * Output a single log line with coloring and relative time.
    */
-  private function groupEntries(array $lines): array {
-    $entries = [];
-    $current = [];
-
-    foreach ($lines as $line) {
-      $isStart = (bool) preg_match('/^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/', $line);
-
-      if ($isStart && ! empty($current)) {
-        $entries[] = $current;
-        $current   = [];
-      }
-
-      $current[] = $line;
-    }
-
-    if (! empty($current)) {
-      $entries[] = $current;
-    }
-
-    return $entries;
-  }
-
-  private function renderEntry(array $lines): void {
-    $this->line(''); // spacing between entries
-
-    $first = $lines[0] ?? '';
-    $this->outputLine($first);
-
-    $rest = array_slice($lines, 1);
-    foreach ($rest as $line) {
-      // Stack lines + JSON context tend to be noisy; keep them gray
-      if (Str::startsWith(trim($line), '#') || Str::startsWith(trim($line), '{') || Str::startsWith(trim($line), '"')) {
-        $this->line('<fg=gray>' . $this->escapeTags($line) . '</>');
-        continue;
-      }
-
-      $this->line('<fg=gray>' . $this->escapeTags($line) . '</>');
-    }
-
-    $this->line('<fg=gray>' . str_repeat('-', 60) . '</>');
-  }
-
-  /**
-   * Output a line with minimal but safe formatting.
-   */
-  protected function outputLine(string $line): void {
-    $line = $this->escapeTags($line);
-
-// Match leading [YYYY-MM-DD HH:MM:SS]
+  protected function outputLine(string $line): void
+  {
+    // Match leading [YYYY-MM-DD HH:MM:SS]
     if (preg_match('/^(\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\])\s*(.*)$/', $line, $m)) {
-      $rawTimestamp = $m[2];
-      $rest         = $m[3];
-
-      try {
-        $dt       = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $rawTimestamp);
-        $relative = $dt->diffForHumans(null, true); // e.g. "2 minutes"
-        $relative = '(' . $relative . ' ago)';
-      } catch (\Throwable $e) {
-        $relative = '';
-      }
+      $date = DateTime::createFromFormat('Y-m-d H:i:s', $m[2]);
+      $relative = $date ? $this->shortRelativeTime($date) : null;
 
       $timestamp = '<fg=gray>' . $m[1] . '</>';
-      $relative  = $relative
-      ? ' <fg=cyan>' . $relative . '</>'
-      : '';
+      $relative  = $relative ? ' <fg=gray>(' . $relative . ')</>' : '';
 
-      $line = $timestamp . $relative . ' ' . $rest;
+      $line = $timestamp . $relative . ' ' . $m[3];
     }
 
-    if (Str::contains($line, ['.CRITICAL', 'CRITICAL'])) {
-      $this->line('<fg=red;options=bold>' . $line . '</>');
-      return;
-    }
-
-    if (Str::contains($line, ['.ERROR', 'ERROR', 'Exception'])) {
+    if (Str::contains($line, ['ERROR', 'Exception'])) {
       $this->line('<fg=red>' . $line . '</>');
       return;
     }
 
-    if (Str::contains($line, ['.WARNING', 'WARNING'])) {
+    if (Str::contains($line, 'WARNING')) {
       $this->line('<fg=yellow>' . $line . '</>');
       return;
     }
 
-    if (Str::contains($line, ['.INFO', 'INFO'])) {
-      $this->line('<fg=cyan>' . $line . '</>');
+    if (Str::contains($line, 'INFO')) {
+      $this->line('<fg=green>' . $line . '</>');
       return;
     }
 
     $this->line($line);
   }
+
   /**
-   * Prevent Symfony console from treating log content as formatting tags.
+   * Short relative time formatter (s, m, h, d).
    */
-  private function escapeTags(string $text): string {
-    return str_replace(['<', '>'], ['&lt;', '&gt;'], $text);
+  protected function shortRelativeTime(DateTime $time): string
+  {
+    $now  = new DateTime();
+    $diff = $now->getTimestamp() - $time->getTimestamp();
+
+    if ($diff < 0) {
+      $diff = abs($diff);
+      if ($diff < 60) return $diff . 's';
+      if ($diff < 3600) return floor($diff / 60) . 'm';
+      if ($diff < 86400) return floor($diff / 3600) . 'h';
+      return floor($diff / 86400) . 'd';
+    }
+
+    if ($diff < 60) {
+      return $diff . 's';
+    }
+
+    if ($diff < 3600) {
+      return floor($diff / 60) . 'm';
+    }
+
+    if ($diff < 86400) {
+      return floor($diff / 3600) . 'h';
+    }
+
+    return floor($diff / 86400) . 'd';
   }
 }

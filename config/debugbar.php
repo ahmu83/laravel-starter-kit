@@ -306,7 +306,11 @@ return [
      |
      | Additional middleware to run on the Debugbar routes
      */
-    'route_middleware' => [],
+    // 'route_middleware' => [],
+
+    'route_middleware' => env('APP_ENV') === 'local'
+      ? []
+      : ['ip.access:class'],
 
     /*
      |--------------------------------------------------------------------------
