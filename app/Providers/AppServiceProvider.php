@@ -64,31 +64,104 @@ class AppServiceProvider extends ServiceProvider {
    *   ];
    */
   protected function registerInternalAccessGates(): void {
-    Gate::define('accessToolbox', function ($user): bool {
+    /**
+     * IP-based authorization gate.
+     *
+     * This gate does NOT rely on the authenticated user.
+     * It authorizes access purely based on the request IP.
+     *
+     * Examples:
+     *
+     * $this->authorize('ip-access');
+     *
+     * // Strict IPv4 only
+     * $this->authorize('ip-access', ['strict', 'v4']);
+     *
+     * // Class mode using config class lists
+     * $this->authorize('ip-access', ['class', 'auto']);
+     *
+     * // Inline allowlists
+     * $this->authorize('ip-access', [
+     *   'strict',
+     *   'auto',
+     *   '162.197.8.160|10.0.0.5',
+     *   '2001:4860:7:110e::d5',
+     * ]);
+     *
+     * // Manual check
+     * if (Gate::denies('ip-access')) {
+     *   abort(403);
+     * }
+     */
+    Gate::define('ip-access', function ($user = null, ...$args): bool {
+      $mode = $args[0] ?? 'strict';      // strict | class
+      $ipVersion = $args[1] ?? 'auto';   // auto | v4 | v6
+      $allowedV4 = $args[2] ?? null;     // pipe-separated list or null to use config
+      $allowedV6 = $args[3] ?? null;     // pipe-separated list or null to use config
+
+      $clientIp = (string) request()->ip();
+
+      if ($clientIp === '') {
+        return false;
+      }
+
+      return app(IpAccessService::class)->isAllowed(
+        $clientIp,
+        $mode,
+        $ipVersion,
+        $allowedV4,
+        $allowedV6
+      );
+    });
+
+    /**
+     * Authorization gate for viewing Laravel Pulse.
+     *
+     * Access rules:
+     * - User must be an admin (via User::isAdmin()).
+     * - Request must originate from an allowed IP address.
+     *
+     * IP enforcement is delegated to the `ip-access` gate to ensure
+     * the same IP allowlist logic is reused across the application.
+     *
+     * Current policy:
+     * - strict mode
+     * - auto IP version (IPv4 + IPv6)
+     * - exact IP matches only
+     *
+     * Alternative (commented below):
+     * - class mode
+     * - allows entire IPv4 /24 and IPv6 /64 networks
+     */
+    Gate::define('viewPulse', function ($user = null) {
+      // Allow unrestricted access in local
       if (app()->environment('local')) {
         return true;
       }
 
-      $allowed = config('toolbox.allowed_emails', []);
-      if (empty($allowed)) {
+      // Non-local: must be logged in and admin
+      if (! $user instanceof User) {
         return false;
       }
 
-      return in_array((string) $user->email, $allowed, true);
-    });
-
-    Gate::define('accessSandbox', function ($user): bool {
-      if (app()->environment('local')) {
-        return true;
-      }
-
-      $allowed = config('sandbox.allowed_emails', []);
-      if (empty($allowed)) {
+      if (! $user->isAdmin()) {
         return false;
       }
 
-      return in_array((string) $user->email, $allowed, true);
+      // Non-local: IP allowlist
+      return Gate::allows(
+        'ip-access',
+        ['strict', 'auto', '162.197.8.160', '2001:4860:7:110e::d5']
+      );
+
+      // Alternative network-based access:
+      // return Gate::allows(
+      //   'ip-access',
+      //   ['class', 'auto', '162.197.8.0/24', '2001:4860:7:110e::/64']
+      // );
+
     });
+
   }
 
   /**

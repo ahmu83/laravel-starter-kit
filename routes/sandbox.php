@@ -1,9 +1,7 @@
 <?php
 
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Sandbox\TestController;
+use App\Http\Controllers\Sandbox\SandboxController;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,50 +9,25 @@ use App\Http\Controllers\Sandbox\TestController;
 |--------------------------------------------------------------------------
 |
 | Isolated sandbox endpoints for testing and debugging.
-| Protected by sandbox + basic auth middleware.
+| Protected by basic auth, with selective sandbox access enforcement.
 |
 */
 
-$handlers = [];
-
-$handlers['index'] = function () {
-
-  $data = [
-    'status' => 'ok',
-    'message' => 'Sandbox root route is working',
-    'user' => auth()->check() ? auth()->user()->email : null,
-    'environment' => app()->environment(),
-    'routes' => [],
-  ];
-
-  dd($data);
-
-};
-
-$handlers['ping'] = function () {
-
-  return 'sandbox pong';
-
-};
-
-$handlers['test'] = [TestController::class, 'handler_test'];
-$handlers['test-proxied-url'] = [TestController::class, 'handler_proxied_url'];
-
-
-
-
-Route::middleware(['web', 'sandbox.access', 'basic.auth'])
-// Route::middleware(['web', 'can:accessToolbox'])
+Route::middleware(['web', 'basic.auth'])
   ->prefix('sandbox')
   ->name('sandbox.')
-  ->group(function () use ($handlers) {
+  ->group(function () {
 
-    Route::get('/', $handlers['index'])->name('index');
-    Route::get('/ping', $handlers['ping'])->name('ping');
+    // Public (within sandbox, but no sandbox.access)
+    Route::get('/', [SandboxController::class, 'index'])->name('index');
+    Route::get('/pages', [SandboxController::class, 'pages'])->name('pages');
+    Route::get('/ping', [SandboxController::class, 'ping'])->name('ping');
 
-    Route::get( '/test', $handlers['test'] )->name('test');
-    Route::get( '/test/proxied-url', $handlers['test-proxied-url'] )->name('test.proxied-url');
+    Route::middleware(['sandbox.access:administrator'])->group(function () {
+      Route::get('/test', [SandboxController::class, 'test'])->name('test');
+      // Route::post('/reset', ...);
+    });
+
+    Route::get('/test/proxied-url', [SandboxController::class, 'proxiedUrl'])->name('test.proxied-url');
 
   });
-
-

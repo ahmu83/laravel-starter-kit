@@ -12,6 +12,7 @@
         "php": "^8.2",
         "houdaslassi/vantage": "^0.1.21",
         "laravel/framework": "^12.0",
+        "laravel/pulse": "^1.4",
         "laravel/socialite": "^5.24",
         "laravel/tinker": "^2.10.1",
         "opcodesio/log-viewer": "^3.21"

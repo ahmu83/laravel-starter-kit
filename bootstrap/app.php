@@ -59,6 +59,8 @@ return Application::configure(basePath: dirname(__DIR__))
       'has.wp.role'       => \App\Http\Middleware\HasWpRole::class,
       'has.wp.capability' => \App\Http\Middleware\HasWpCapability::class,
 
+      'ip.access' => \App\Http\Middleware\IpAccess::class,
+
     ]);
 
     /*

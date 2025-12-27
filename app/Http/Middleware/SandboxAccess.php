@@ -6,43 +6,46 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class SandboxAccess
+class SandboxAccess extends HasWpRole
 {
   /**
    * Restrict access to sandbox routes.
-   * Sandbox access control middleware.
    *
-   * This middleware restricts access to sandbox routes based on:
-   * - Authentication status
-   * - An explicit allowlist of email addresses
+   * Enforcement order:
+   * 1. Local environment bypass (optional)
+   * 2. Authenticated user required
+   * 3. WordPress role check (explicit roles required)
+   * 4. Email allowlist check (sandbox.allowed_emails)
    *
-   * This middleware is intentionally "fail safe":
-   * - Not logged in      -> access denied
-   * - Allowlist missing -> access denied
-   * - Email not allowed -> access denied
-   *
-   * The goal is to prevent accidental exposure of internal
-   * sandbox or testing routes.
+   * IMPORTANT:
+   * - At least one role MUST be provided.
+   * - If no role is passed, access is denied (fail closed).
    */
-  public function handle(Request $request, Closure $next): Response
+  public function handle(Request $request, Closure $next, string ...$roles): Response
   {
-    // Allow unrestricted access in local environment
+    // Optional: allow unrestricted access locally
     if (app()->environment('local')) {
       return $next($request);
     }
 
     if (! auth()->check()) {
-      abort(403, 'You must be logged in to access sandbox routes.');
+      abort(403, 'Authentication required.');
     }
 
-    $allowed = config('sandbox.allowed_emails', []);
-    $email   = (string) auth()->user()->email;
+    // 1) Enforce WordPress role(s)
+    parent::handle($request, function () {
+      // no-op; role enforcement happens inside HasWpRole
+    }, ...$roles);
 
-    if (empty($allowed)) {
+    // 2) Enforce email allowlist
+    $allowedEmails = config('sandbox.allowed_emails', []);
+    $email = (string) auth()->user()->email;
+
+    if (empty($allowedEmails)) {
       abort(403, 'Sandbox allowed emails are not configured.');
     }
 
-    if (! in_array($email, $allowed, true)) {
+    if (! in_array($email, $allowedEmails, true)) {
       abort(403, 'You are not allowed to access sandbox routes.');
     }
 
