@@ -16,7 +16,7 @@ class AppServiceProvider extends ServiceProvider {
     $this->registerInternalAccessGates();
     $this->registerWordPressGates();
     $this->registerWordPressBladeDirectives();
-    $this->maybeApplyProxiedAppUrl();
+    // $this->maybeApplyProxiedAppUrl();
   }
 
   /**
