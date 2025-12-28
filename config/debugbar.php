@@ -14,12 +14,20 @@ return [
      |
      */
 
+    // 'enabled' => env('DEBUGBAR_ENABLED', null),
+
     'enabled' => env('DEBUGBAR_ENABLED', null),
+
+
+
     'hide_empty_tabs' => env('DEBUGBAR_HIDE_EMPTY_TABS', true), // Hide tabs until they have content
     'except' => [
         'telescope*',
         'horizon*',
         '_boost/browser-logs',
+        'toolbox/log-viewer*',
+        'toolbox/queues*',
+        'toolbox/pulse*',
     ],
 
     /*
@@ -308,9 +316,15 @@ return [
      */
     // 'route_middleware' => [],
 
-    'route_middleware' => env('APP_ENV') === 'local'
-      ? []
-      : ['ip.access:class'],
+'route_middleware' => (function () {
+  $raw = strtolower(trim((string) env('DEBUGBAR_ENABLE_METHOD', '')));
+  $mws = [];
+
+  if (str_contains($raw, 'ip:strict')) $mws[] = 'ip.access:strict';
+  if (str_contains($raw, 'ip:class'))  $mws[] = 'ip.access:class';
+
+  return $mws;
+})(),
 
     /*
      |--------------------------------------------------------------------------

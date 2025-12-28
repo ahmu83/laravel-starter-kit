@@ -40,7 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
        * Sandbox / tooling
        */
       'sandbox.access' => \App\Http\Middleware\SandboxAccess::class,
-      'toolbox.access' => \App\Http\Middleware\SandboxAccess::class,
+      'toolbox.access' => \App\Http\Middleware\ToolboxAccess::class,
 
       /**
        * WordPress roles / capabilities
@@ -61,6 +61,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
       'ip.access' => \App\Http\Middleware\IpAccess::class,
 
+      'logviewer.access' => \App\Http\Middleware\LogViewerAccess::class,
+
+      'vantage.access' => \App\Http\Middleware\VantageAccess::class,
+
+      'pulse.access' => \App\Http\Middleware\PulseAccess::class,
+
     ]);
 
     /*
@@ -73,6 +79,7 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->web(append: [
       \App\Http\Middleware\Log::class,
       \App\Http\Middleware\SyncWordPressAuth::class,
+      \App\Http\Middleware\ConditionalFeatureEnable::class,
     ]);
 
     // Replace the default CSRF middleware with your customized one

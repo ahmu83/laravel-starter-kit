@@ -122,6 +122,7 @@ return [
 
     'middleware' => [
         'web',
+        'pulse.access',
         Authorize::class,
     ],
 
