@@ -18,8 +18,6 @@ return [
     */
 
     'domain' => env('PULSE_DOMAIN'),
-    // 'enable_method' => env('PULSE_ENABLE_METHOD', ''),
-    'enabled' => env('PULSE_ENABLED', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -42,6 +40,8 @@ return [
     | This configuration option may be used to completely disable all Pulse
     | data recorders regardless of their individual configurations. This
     | provides a single option to quickly disable all Pulse recording.
+    |
+    | Note: This is the ONLY 'enabled' key - removed the duplicate at line 15
     |
     */
 

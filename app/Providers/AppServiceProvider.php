@@ -24,19 +24,24 @@ class AppServiceProvider extends ServiceProvider
     | Log Viewer Authorization
     |--------------------------------------------------------------------------
     |
-    | Uses unified FeatureGate service for consistent access control.
-    | Respects LOG_VIEWER_ENABLED and LOG_VIEWER_ENABLE_METHOD configs.
+    | Uses unified FeatureGate service with override behavior.
+    |
+    | Override behavior:
+    | - If enable_method is set → Override base enabled config
+    | - If enable_method is empty/none → Respect base enabled config
     |
     */
     LogViewer::auth(function ($request) {
-      if (! config('features.log_viewer.enabled')) {
-        return false;
+      $baseEnabled = (bool) config('features.log_viewer.enabled');
+      $enableMethod = (string) config('features.log_viewer.enable_method');
+
+      // If override is active, use it
+      if ($this->hasOverride($enableMethod)) {
+        return app(FeatureGate::class)->allowed($request, $enableMethod);
       }
 
-      return app(FeatureGate::class)->allowed(
-        $request,
-        (string) config('features.log_viewer.enable_method')
-      );
+      // No override: respect base enabled
+      return $baseEnabled;
     });
 
     /*
@@ -44,27 +49,29 @@ class AppServiceProvider extends ServiceProvider
     | Pulse Authorization
     |--------------------------------------------------------------------------
     |
-    | Uses unified FeatureGate service for consistent access control.
-    | Respects PULSE_ENABLED and PULSE_ENABLE_METHOD configs.
+    | Uses unified FeatureGate service with override behavior.
     |
-    | Configuration examples:
-    | - PULSE_ENABLE_METHOD=none           → Allow all
-    | - PULSE_ENABLE_METHOD=deny_all       → Block all
-    | - PULSE_ENABLE_METHOD=auth           → Any authenticated user
-    | - PULSE_ENABLE_METHOD=auth:admin     → WordPress admin only
-    | - PULSE_ENABLE_METHOD=ip:strict      → Specific IP addresses
-    | - PULSE_ENABLE_METHOD=ip:class,auth:admin → IP + admin (AND logic)
+    | Override behavior:
+    | - If enable_method is set → Override base enabled config
+    | - If enable_method is empty/none → Respect base enabled config
+    |
+    | Examples:
+    |   PULSE_ENABLED=false
+    |   PULSE_ENABLE_METHOD=ip:strict
+    |   Result: Enabled ONLY for allowed IPs
     |
     */
     Gate::define('viewPulse', function ($user = null) {
-      if (! config('features.pulse.enabled')) {
-        return false;
+      $baseEnabled = (bool) config('features.pulse.enabled');
+      $enableMethod = (string) config('features.pulse.enable_method');
+
+      // If override is active, use it
+      if ($this->hasOverride($enableMethod)) {
+        return app(FeatureGate::class)->allowed(request(), $enableMethod);
       }
 
-      return app(FeatureGate::class)->allowed(
-        request(),
-        (string) config('features.pulse.enable_method')
-      );
+      // No override: respect base enabled
+      return $baseEnabled;
     });
 
     /*
@@ -77,6 +84,18 @@ class AppServiceProvider extends ServiceProvider
 
     // Optional (only if you actively use APP_URL_PROXIED behavior)
     // $this->maybeApplyProxiedAppUrl();
+  }
+
+  /**
+   * Check if enable_method is acting as an override.
+   *
+   * Empty or "none" means no override (use base config).
+   * Any other value means override is active.
+   */
+  protected function hasOverride(string $enableMethod): bool
+  {
+    $normalized = strtolower(trim($enableMethod));
+    return $normalized !== '' && $normalized !== 'none';
   }
 
   /**

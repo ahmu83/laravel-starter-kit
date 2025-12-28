@@ -11,42 +11,49 @@ class VantageAccess
   /**
    * Restrict access to Vantage (queue monitoring) routes.
    *
-   * Uses the unified feature gate system for consistent access control.
+   * Override Behavior:
+   * - If enable_method is set → It OVERRIDES the base enabled config
+   * - If enable_method is empty/none → Respect base enabled config
    *
-   * Behavior:
-   * 1. Check if Vantage is enabled (hard toggle)
-   * 2. Apply request-level gating via enable_method config
-   *
-   * Configuration:
-   * - config/features.php: vantage.enabled, vantage.enable_method
-   * - .env: VANTAGE_ENABLED, VANTAGE_ENABLE_METHOD
-   *
-   * Enable method options:
-   * - empty/none: allow all
-   * - deny_all: block everyone
-   * - ip:strict: require exact IP match
-   * - ip:class: require CIDR/class IP match
-   * - auth: require any authenticated user
-   * - auth:admin: require WordPress admin
-   * - Comma-separated for AND logic: ip:class,auth:admin
+   * This allows you to do:
+   *   VANTAGE_ENABLED=false
+   *   VANTAGE_ENABLE_METHOD=ip:strict
+   *   Result: Vantage is enabled ONLY for allowed IPs (override)
    */
   public function handle(Request $request, Closure $next)
   {
-    // Hard toggle - if disabled, return 404 to hide existence
-    if (! config('features.vantage.enabled')) {
-      abort(404);
+    $baseEnabled = (bool) config('features.vantage.enabled');
+    $enableMethod = (string) config('features.vantage.enable_method');
+
+    // Check if override is active (enable_method is set)
+    if ($this->hasOverride($enableMethod)) {
+      // Override mode: enable_method decides access
+      $allowed = app(FeatureGate::class)->allowed($request, $enableMethod);
+
+      if (! $allowed) {
+        abort(404);
+      }
+
+      return $next($request);
     }
 
-    // Request-level gating via FeatureGate service
-    $allowed = app(FeatureGate::class)->allowed(
-      $request,
-      (string) config('features.vantage.enable_method')
-    );
-
-    if (! $allowed) {
+    // No override: respect base enabled config
+    if (! $baseEnabled) {
       abort(404);
     }
 
     return $next($request);
+  }
+
+  /**
+   * Check if enable_method is acting as an override.
+   *
+   * Empty or "none" means no override (use base config).
+   * Any other value means override is active.
+   */
+  protected function hasOverride(string $enableMethod): bool
+  {
+    $normalized = strtolower(trim($enableMethod));
+    return $normalized !== '' && $normalized !== 'none';
   }
 }
