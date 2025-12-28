@@ -27,10 +27,10 @@ class ToolboxController {
 
   public function tools(Request $request) {
     $links = [
-      'Logs Viewer'   => 'toolbox/log-viewer',
-      'Queues Viewer' => 'toolbox/queues',
-      'Tinker'        => 'toolbox/tinker',
-      'Pulse APM'     => 'toolbox/pulse',
+      'Logs Viewer'   => 'vendor-tools/log-viewer',
+      'Queues Viewer' => 'vendor-tools/queues',
+      'Tinker'        => 'vendor-tools/tinker',
+      'Pulse APM'     => 'vendor-tools/pulse',
     ];
 
     $data = [];

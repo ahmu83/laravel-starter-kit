@@ -2,64 +2,48 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\IpAccessService;
+use App\Services\FeatureGate;
 use Closure;
 use Illuminate\Http\Request;
 
 class VantageAccess
 {
+  /**
+   * Restrict access to Vantage (queue monitoring) routes.
+   *
+   * Uses the unified feature gate system for consistent access control.
+   *
+   * Behavior:
+   * 1. Check if Vantage is enabled (hard toggle)
+   * 2. Apply request-level gating via enable_method config
+   *
+   * Configuration:
+   * - config/features.php: vantage.enabled, vantage.enable_method
+   * - .env: VANTAGE_ENABLED, VANTAGE_ENABLE_METHOD
+   *
+   * Enable method options:
+   * - empty/none: allow all
+   * - deny_all: block everyone
+   * - ip:strict: require exact IP match
+   * - ip:class: require CIDR/class IP match
+   * - auth: require any authenticated user
+   * - auth:admin: require WordPress admin
+   * - Comma-separated for AND logic: ip:class,auth:admin
+   */
   public function handle(Request $request, Closure $next)
   {
-    // Hard toggle
-    if (! filter_var(env('VANTAGE_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
+    // Hard toggle - if disabled, return 404 to hide existence
+    if (! config('features.vantage.enabled')) {
       abort(404);
     }
 
-    // Reuse the same method parsing logic, locally.
-    // (Keeps ConditionalFeatureEnable::isFeatureAllowed() private.)
-    $raw = strtolower(trim((string) env('VANTAGE_ENABLE_METHOD', '')));
+    // Request-level gating via FeatureGate service
+    $allowed = app(FeatureGate::class)->allowed(
+      $request,
+      (string) config('features.vantage.enable_method')
+    );
 
-    if ($raw === '' || $raw === 'none') {
-      return $next($request);
-    }
-
-    $methods = array_values(array_filter(array_map('trim', explode(',', $raw))));
-
-    if (in_array('deny_all', $methods, true)) {
-      abort(404);
-    }
-
-    foreach ($methods as $method) {
-      if (str_starts_with($method, 'ip:')) {
-        $mode = trim(substr($method, 3));
-
-        if (! in_array($mode, ['strict', 'class'], true)) {
-          abort(404);
-        }
-
-        $ip = (string) $request->ip();
-        if ($ip === '' || ! app(IpAccessService::class)->isAllowed($ip, $mode)) {
-          abort(404);
-        }
-
-        continue;
-      }
-
-      if ($method === 'auth' || $method === 'auth:any') {
-        if (! auth()->check()) {
-          abort(404);
-        }
-        continue;
-      }
-
-      if ($method === 'auth:admin') {
-        $user = auth()->user();
-        if (! $user || ! method_exists($user, 'isWpAdmin') || ! $user->isWpAdmin()) {
-          abort(404);
-        }
-        continue;
-      }
-
+    if (! $allowed) {
       abort(404);
     }
 

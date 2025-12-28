@@ -18,6 +18,8 @@ return [
     */
 
     'domain' => env('PULSE_DOMAIN'),
+    // 'enable_method' => env('PULSE_ENABLE_METHOD', ''),
+    'enabled' => env('PULSE_ENABLED', true),
 
     /*
     |--------------------------------------------------------------------------

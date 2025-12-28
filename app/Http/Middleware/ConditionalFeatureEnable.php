@@ -10,46 +10,37 @@ class ConditionalFeatureEnable
 {
   public function handle(Request $request, Closure $next)
   {
-    $this->maybeDisableDebugbar($request);
-    $this->maybeDisableAppDebug($request);
+    $gate = app(FeatureGate::class);
+
+    $this->maybeDisableDebugbar($request, $gate);
+    $this->maybeDisableAppDebug($request, $gate);
 
     return $next($request);
   }
 
-  protected function maybeDisableDebugbar(Request $request): void
+  protected function maybeDisableDebugbar(Request $request, FeatureGate $gate): void
   {
     if (! app()->bound('debugbar')) {
       return;
     }
 
-    if (! filter_var(env('DEBUGBAR_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
+    if (! config('features.debugbar.enabled')) {
       app('debugbar')->disable();
       return;
     }
 
-    $allowed = app(FeatureGate::class)->allowed(
-      $request,
-      (string) env('DEBUGBAR_ENABLE_METHOD', '')
-    );
-
-    if (! $allowed) {
+    if (! $gate->allowed($request, (string) config('features.debugbar.enable_method'))) {
       app('debugbar')->disable();
     }
   }
 
-  protected function maybeDisableAppDebug(Request $request): void
+  protected function maybeDisableAppDebug(Request $request, FeatureGate $gate): void
   {
-    // Global off => do nothing
     if (! config('app.debug')) {
       return;
     }
 
-    $allowed = app(FeatureGate::class)->allowed(
-      $request,
-      (string) env('APP_DEBUG_ENABLE_METHOD', '')
-    );
-
-    if (! $allowed) {
+    if (! $gate->allowed($request, (string) config('features.app_debug.enable_method'))) {
       config()->set('app.debug', false);
     }
   }

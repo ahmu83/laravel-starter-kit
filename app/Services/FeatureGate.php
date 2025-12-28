@@ -1,34 +1,38 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Services\IpAccessService;
 
-class FeatureGate {
-  public function allowed(Request $request, string $methodRaw): bool {
+class FeatureGate
+{
+  public function allowed(Request $request, string $methodRaw): bool
+  {
     $raw = strtolower(trim($methodRaw));
 
-    // Missing / empty → allow (default-on)
+    // Missing / empty -> allow (default-on)
     if ($raw === '') {
       return true;
     }
 
-    $methods = array_values(
-      array_filter(array_map('trim', explode(',', $raw)))
-    );
+    $methods = array_values(array_filter(array_map('trim', explode(',', $raw))));
 
-    // Explicit deny for everyone
+    // Explicit deny always wins
     if (in_array('deny_all', $methods, true)) {
       return false;
     }
 
-    // `none` means "no conditions" (only when it's the sole token)
+    // `none` only valid if it's the sole token
     if (count($methods) === 1 && $methods[0] === 'none') {
       return true;
     }
 
     foreach ($methods as $method) {
+
+      if ($method === 'none' || $method === 'deny_all') {
+        continue;
+      }
 
       // ip:strict | ip:class
       if (str_starts_with($method, 'ip:')) {
@@ -73,7 +77,7 @@ class FeatureGate {
         continue;
       }
 
-      // Unknown token → fail closed
+      // Unknown token -> fail closed
       return false;
     }
 

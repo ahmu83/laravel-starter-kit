@@ -41,8 +41,8 @@ return [
     |
     */
 
-    'route_path' => 'toolbox/log-viewer',
     // 'route_path' => 'log-viewer',
+    'route_path' => 'vendor-tools/log-viewer',
 
     /*
     |--------------------------------------------------------------------------

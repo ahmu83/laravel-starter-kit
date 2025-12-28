@@ -3,11 +3,32 @@
 use App\Http\Controllers\Toolbox\ToolboxController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Toolbox Routes (/toolbox/*)
+|--------------------------------------------------------------------------
+|
+| Internal tooling routes for development and debugging.
+|
+| Access Control Strategy (ALTERNATIVE VERSION):
+| - Toolbox pages require WordPress admin role + email allowlist
+| - Vantage has INDEPENDENT access control via feature gate
+| - Individual features (Pulse, LogViewer) use their own feature gates
+|
+| Use this version if Vantage needs different access rules than toolbox.
+|
+*/
+
 Route::middleware(['web'])
   ->prefix('toolbox')
   ->group(function () {
 
-    // Toolbox pages (keep protected)
+    /*
+    |--------------------------------------------------------------------------
+    | Toolbox Pages
+    |--------------------------------------------------------------------------
+    | Main toolbox interface and tools listing
+    */
     Route::middleware(['toolbox.access:administrator'])->group(function () {
       Route::name('toolbox.')->group(function () {
         Route::get('/', [ToolboxController::class, 'index'])->name('index');
@@ -15,15 +36,5 @@ Route::middleware(['web'])
         Route::get('/ping', [ToolboxController::class, 'ping'])->name('ping');
       });
     });
-
-    // Vantage (queues) - protected by feature enable/method middleware
-    Route::middleware([
-      'vantage.access',
-      'toolbox.access:administrator',
-    ])
-      ->prefix('queues')
-      ->group(function () {
-        require base_path('routes/vendor/vantage.php');
-      });
 
   });

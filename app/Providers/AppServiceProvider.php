@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Opcodes\LogViewer\Facades\LogViewer;
+use App\Services\FeatureGate;
+use App\Models\User;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,6 +19,59 @@ class AppServiceProvider extends ServiceProvider
 
   public function boot(): void
   {
+    /*
+    |--------------------------------------------------------------------------
+    | Log Viewer Authorization
+    |--------------------------------------------------------------------------
+    |
+    | Uses unified FeatureGate service for consistent access control.
+    | Respects LOG_VIEWER_ENABLED and LOG_VIEWER_ENABLE_METHOD configs.
+    |
+    */
+    LogViewer::auth(function ($request) {
+      if (! config('features.log_viewer.enabled')) {
+        return false;
+      }
+
+      return app(FeatureGate::class)->allowed(
+        $request,
+        (string) config('features.log_viewer.enable_method')
+      );
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pulse Authorization
+    |--------------------------------------------------------------------------
+    |
+    | Uses unified FeatureGate service for consistent access control.
+    | Respects PULSE_ENABLED and PULSE_ENABLE_METHOD configs.
+    |
+    | Configuration examples:
+    | - PULSE_ENABLE_METHOD=none           → Allow all
+    | - PULSE_ENABLE_METHOD=deny_all       → Block all
+    | - PULSE_ENABLE_METHOD=auth           → Any authenticated user
+    | - PULSE_ENABLE_METHOD=auth:admin     → WordPress admin only
+    | - PULSE_ENABLE_METHOD=ip:strict      → Specific IP addresses
+    | - PULSE_ENABLE_METHOD=ip:class,auth:admin → IP + admin (AND logic)
+    |
+    */
+    Gate::define('viewPulse', function ($user = null) {
+      if (! config('features.pulse.enabled')) {
+        return false;
+      }
+
+      return app(FeatureGate::class)->allowed(
+        request(),
+        (string) config('features.pulse.enable_method')
+      );
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | WordPress Gates & Blade Directives
+    |--------------------------------------------------------------------------
+    */
     $this->registerWordPressGates();
     $this->registerWordPressBladeDirectives();
 

@@ -25,9 +25,9 @@ return [
         'telescope*',
         'horizon*',
         '_boost/browser-logs',
-        'toolbox/log-viewer*',
-        'toolbox/queues*',
-        'toolbox/pulse*',
+        'vendor-tools/log-viewer*',
+        'vendor-tools/queues*',
+        'vendor-tools/pulse*',
     ],
 
     /*

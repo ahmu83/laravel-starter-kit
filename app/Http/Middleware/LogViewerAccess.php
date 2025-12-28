@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\FeatureGate;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -10,17 +11,13 @@ class LogViewerAccess
 {
   public function handle(Request $request, Closure $next): Response
   {
-    // Global hard toggle
-    if (! filter_var(env('LOG_VIEWER_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
+    if (! config('features.log_viewer.enabled')) {
       abort(404);
     }
 
-    /** @var \App\Http\Middleware\ConditionalFeatureEnable $gate */
-    $gate = app(ConditionalFeatureEnable::class);
-
-    $allowed = $gate->isFeatureAllowed(
+    $allowed = app(FeatureGate::class)->allowed(
       $request,
-      (string) env('LOG_VIEWER_ENABLE_METHOD', '')
+      (string) config('features.log_viewer.enable_method')
     );
 
     if (! $allowed) {
