@@ -37,10 +37,10 @@ Route::middleware(['web'])
     | Vantage (Queue Monitoring)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['vantage.access'])
-      ->prefix('queues')
-      ->group(function () {
-        require base_path('routes/vendor/vantage.php');
-      });
+    // Route::middleware(['vantage.access'])
+    //   ->prefix('queues')
+    //   ->group(function () {
+    //     require base_path('routes/vendor/vantage.php');
+    //   });
 
   });
