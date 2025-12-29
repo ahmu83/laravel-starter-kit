@@ -13,22 +13,25 @@ class LogViewerAccess
    * Restrict access to Log Viewer routes.
    *
    * Override Behavior:
-   * - If enable_method is set → It OVERRIDES the base enabled config
+   * - If enable_method is set → It IS the source of truth (ignores base enabled)
    * - If enable_method is empty/none → Respect base enabled config
    *
-   * This allows you to do:
+   * Examples:
    *   LOG_VIEWER_ENABLED=false
    *   LOG_VIEWER_ENABLE_METHOD=ip:strict
-   *   Result: Log Viewer is enabled ONLY for allowed IPs (override)
+   *   Result: Log Viewer enabled ONLY for allowed IPs ✅ (base ENABLED ignored)
+   *
+   *   LOG_VIEWER_ENABLED=true
+   *   LOG_VIEWER_ENABLE_METHOD=deny_all
+   *   Result: Log Viewer disabled for everyone ✅ (base ENABLED ignored)
    */
   public function handle(Request $request, Closure $next): Response
   {
-    $baseEnabled = (bool) config('features.log_viewer.enabled');
     $enableMethod = (string) config('features.log_viewer.enable_method');
 
     // Check if override is active (enable_method is set)
     if ($this->hasOverride($enableMethod)) {
-      // Override mode: enable_method decides access
+      // Override mode: enable_method IS the source of truth
       $allowed = app(FeatureGate::class)->allowed($request, $enableMethod);
 
       if (! $allowed) {
@@ -39,6 +42,8 @@ class LogViewerAccess
     }
 
     // No override: respect base enabled config
+    $baseEnabled = (bool) config('features.log_viewer.enabled');
+
     if (! $baseEnabled) {
       abort(404);
     }

@@ -25,14 +25,15 @@ class AppServiceProvider extends ServiceProvider
     |--------------------------------------------------------------------------
     */
     LogViewer::auth(function ($request) {
-      $baseEnabled = (bool) config('features.log_viewer.enabled');
       $enableMethod = (string) config('features.log_viewer.enable_method');
 
+      // If override is set, it IS the source of truth
       if ($this->hasOverride($enableMethod)) {
         return app(FeatureGate::class)->allowed($request, $enableMethod);
       }
 
-      return $baseEnabled;
+      // No override: respect base config
+      return (bool) config('features.log_viewer.enabled');
     });
 
     /*
@@ -41,36 +42,32 @@ class AppServiceProvider extends ServiceProvider
     |--------------------------------------------------------------------------
     */
     Gate::define('viewPulse', function ($user = null) {
-      $baseEnabled = (bool) config('features.pulse.enabled');
       $enableMethod = (string) config('features.pulse.enable_method');
 
+      // If override is set, it IS the source of truth
       if ($this->hasOverride($enableMethod)) {
         return app(FeatureGate::class)->allowed(request(), $enableMethod);
       }
 
-      return $baseEnabled;
+      // No override: respect base config
+      return (bool) config('features.pulse.enabled');
     });
 
     /*
     |--------------------------------------------------------------------------
     | Vantage Authorization
     |--------------------------------------------------------------------------
-    |
-    | Gate used by Vantage package when 'auth.enabled' is true.
-    | This provides the same override behavior as other vendor tools.
-    |
     */
     Gate::define('viewVantage', function ($user = null) {
-      $baseEnabled = (bool) config('features.vantage.enabled');
       $enableMethod = (string) config('features.vantage.enable_method');
 
-      // If override is active, use it
+      // If override is set, it IS the source of truth
       if ($this->hasOverride($enableMethod)) {
         return app(FeatureGate::class)->allowed(request(), $enableMethod);
       }
 
-      // No override: respect base enabled
-      return $baseEnabled;
+      // No override: respect base config
+      return (bool) config('features.vantage.enabled');
     });
 
     /*

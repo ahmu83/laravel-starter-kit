@@ -13,27 +13,26 @@ class ConditionalFeatureEnable
    *
    * This middleware provides dynamic per-request feature toggling.
    *
-   * Behavior:
-   * - If enable_method is set, it OVERRIDES the base enabled config
-   * - Feature is enabled/disabled based on gate check (IP, auth, etc.)
-   * - If enable_method is empty/none, base config wins
+   * Override Behavior:
+   * - If enable_method is set → It IS the source of truth (ignores base enabled)
+   * - If enable_method is empty/none → Respect base enabled config
    *
    * Examples:
    *
    * Example 1: Override disabled feature
    *   APP_DEBUG=false
    *   APP_DEBUG_ENABLE_METHOD=ip:strict
-   *   Result: APP_DEBUG becomes true for allowed IPs, false for others
+   *   Result: APP_DEBUG true for allowed IPs, false for others ✅
    *
    * Example 2: Override enabled feature
    *   DEBUGBAR_ENABLED=true
-   *   DEBUGBAR_ENABLE_METHOD=auth:admin
-   *   Result: Debugbar enabled only for admins, disabled for others
+   *   DEBUGBAR_ENABLE_METHOD=deny_all
+   *   Result: Debugbar disabled for everyone ✅
    *
    * Example 3: No override (respect base config)
    *   APP_DEBUG=true
    *   APP_DEBUG_ENABLE_METHOD=none
-   *   Result: APP_DEBUG stays true for everyone
+   *   Result: APP_DEBUG stays true for everyone ✅
    */
   public function handle(Request $request, Closure $next)
   {
@@ -48,10 +47,11 @@ class ConditionalFeatureEnable
   /**
    * Conditionally enable/disable Debugbar based on enable_method.
    *
-   * Behavior:
-   * - If enable_method is set → Override base config (enable or disable)
+   * NEW BEHAVIOR:
+   * - If enable_method is set → It IS the source of truth
    * - If enable_method is empty/none → Respect base config
-   * - If base enabled=false and no enable_method → Disabled
+   *
+   * CRITICAL: Also sets debugbar.enabled config to override internal checks
    */
   protected function maybeToggleDebugbar(Request $request, FeatureGate $gate): void
   {
@@ -59,16 +59,19 @@ class ConditionalFeatureEnable
       return;
     }
 
-    $baseEnabled = (bool) config('features.debugbar.enabled');
     $enableMethod = (string) config('features.debugbar.enable_method');
 
-    // If enable_method is set, it OVERRIDES base config
+    // If enable_method is set, it IS the source of truth
     if ($this->hasEnableMethod($enableMethod)) {
       $allowed = $gate->allowed($request, $enableMethod);
 
       if ($allowed) {
+        // Force enable debugbar (overrides APP_DEBUG and DEBUGBAR_ENABLED)
+        config()->set('debugbar.enabled', true);
         app('debugbar')->enable();
       } else {
+        // Force disable debugbar
+        config()->set('debugbar.enabled', false);
         app('debugbar')->disable();
       }
 
@@ -76,7 +79,10 @@ class ConditionalFeatureEnable
     }
 
     // No enable_method → respect base config
+    $baseEnabled = (bool) config('features.debugbar.enabled');
+
     if (! $baseEnabled) {
+      config()->set('debugbar.enabled', false);
       app('debugbar')->disable();
     }
   }
@@ -84,19 +90,15 @@ class ConditionalFeatureEnable
   /**
    * Conditionally enable/disable APP_DEBUG based on enable_method.
    *
-   * Behavior:
-   * - If enable_method is set → Override APP_DEBUG (enable or disable)
+   * NEW BEHAVIOR:
+   * - If enable_method is set → It IS the source of truth
    * - If enable_method is empty/none → Respect APP_DEBUG
-   * - If APP_DEBUG=false and no enable_method → Disabled
-   *
-   * Critical: This runs per-request, so APP_DEBUG becomes dynamic!
    */
   protected function maybeToggleAppDebug(Request $request, FeatureGate $gate): void
   {
-    $baseEnabled = (bool) config('app.debug');
     $enableMethod = (string) config('features.app_debug.enable_method');
 
-    // If enable_method is set, it OVERRIDES APP_DEBUG
+    // If enable_method is set, it IS the source of truth
     if ($this->hasEnableMethod($enableMethod)) {
       $allowed = $gate->allowed($request, $enableMethod);
 

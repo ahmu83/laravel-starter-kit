@@ -12,22 +12,25 @@ class PulseAccess
    * Restrict access to Pulse routes.
    *
    * Override Behavior:
-   * - If enable_method is set → It OVERRIDES the base enabled config
+   * - If enable_method is set → It IS the source of truth (ignores base enabled)
    * - If enable_method is empty/none → Respect base enabled config
    *
-   * This allows you to do:
+   * Examples:
    *   PULSE_ENABLED=false
    *   PULSE_ENABLE_METHOD=ip:strict
-   *   Result: Pulse is enabled ONLY for allowed IPs (override)
+   *   Result: Pulse is enabled ONLY for allowed IPs ✅ (base ENABLED ignored)
+   *
+   *   PULSE_ENABLED=true
+   *   PULSE_ENABLE_METHOD=deny_all
+   *   Result: Pulse is disabled for everyone ✅ (base ENABLED ignored)
    */
   public function handle(Request $request, Closure $next)
   {
-    $baseEnabled = (bool) config('features.pulse.enabled');
     $enableMethod = (string) config('features.pulse.enable_method');
 
     // Check if override is active (enable_method is set)
     if ($this->hasOverride($enableMethod)) {
-      // Override mode: enable_method decides access
+      // Override mode: enable_method IS the source of truth
       $allowed = app(FeatureGate::class)->allowed($request, $enableMethod);
 
       if (! $allowed) {
@@ -38,6 +41,8 @@ class PulseAccess
     }
 
     // No override: respect base enabled config
+    $baseEnabled = (bool) config('features.pulse.enabled');
+
     if (! $baseEnabled) {
       abort(404);
     }
