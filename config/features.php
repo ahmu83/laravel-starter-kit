@@ -2,7 +2,7 @@
 
 return [
 
-  /*
+    /*
   |--------------------------------------------------------------------------
   | Pulse (Application Monitoring)
   |--------------------------------------------------------------------------
@@ -14,12 +14,12 @@ return [
   |
   */
 
-  'pulse' => [
-    'enabled' => env('PULSE_ENABLED', true),
-    'enable_method' => env('PULSE_ENABLE_METHOD', ''),
-  ],
+    'pulse' => [
+        'enabled' => env('PULSE_ENABLED', true),
+        'enable_method' => env('PULSE_ENABLE_METHOD', ''),
+    ],
 
-  /*
+    /*
   |--------------------------------------------------------------------------
   | Log Viewer
   |--------------------------------------------------------------------------
@@ -31,12 +31,12 @@ return [
   |
   */
 
-  'log_viewer' => [
-    'enabled' => env('LOG_VIEWER_ENABLED', true),
-    'enable_method' => env('LOG_VIEWER_ENABLE_METHOD', ''),
-  ],
+    'log_viewer' => [
+        'enabled' => env('LOG_VIEWER_ENABLED', true),
+        'enable_method' => env('LOG_VIEWER_ENABLE_METHOD', ''),
+    ],
 
-  /*
+    /*
   |--------------------------------------------------------------------------
   | Debugbar
   |--------------------------------------------------------------------------
@@ -51,12 +51,12 @@ return [
   |
   */
 
-  'debugbar' => [
-    'enabled' => env('DEBUGBAR_ENABLED', false),
-    'enable_method' => env('DEBUGBAR_ENABLE_METHOD', ''),
-  ],
+    'debugbar' => [
+        'enabled' => env('DEBUGBAR_ENABLED', false),
+        'enable_method' => env('DEBUGBAR_ENABLE_METHOD', ''),
+    ],
 
-  /*
+    /*
   |--------------------------------------------------------------------------
   | App Debug Mode
   |--------------------------------------------------------------------------
@@ -71,11 +71,11 @@ return [
   |
   */
 
-  'app_debug' => [
-    'enable_method' => env('APP_DEBUG_ENABLE_METHOD', ''),
-  ],
+    'app_debug' => [
+        'enable_method' => env('APP_DEBUG_ENABLE_METHOD', ''),
+    ],
 
-  /*
+    /*
   |--------------------------------------------------------------------------
   | Vantage (Queue Monitoring)
   |--------------------------------------------------------------------------
@@ -87,9 +87,9 @@ return [
   |
   */
 
-  'vantage' => [
-    'enabled' => env('VANTAGE_ENABLED', true),
-    'enable_method' => env('VANTAGE_ENABLE_METHOD', ''),
-  ],
+    'vantage' => [
+        'enabled' => env('VANTAGE_ENABLED', true),
+        'enable_method' => env('VANTAGE_ENABLE_METHOD', ''),
+    ],
 
 ];

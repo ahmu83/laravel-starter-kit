@@ -1,31 +1,29 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
+use Illuminate\View\View;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\View\View;
 
-class PasswordResetLinkController extends Controller
-{
+class PasswordResetLinkController extends Controller {
     /**
      * Display the password reset link request view.
      */
-    public function create(): View
-    {
+    public function create(): View {
         return view('auth.forgot-password');
     }
 
     /**
      * Handle an incoming password reset link request.
      */
-    public function store(Request $request): RedirectResponse
-    {
+    public function store(Request $request): RedirectResponse {
         // Check if email login is enabled
-        if (!config('social.email_login_enabled', true)) {
+        if (! config('social.email_login_enabled', true)) {
             return back()->withErrors([
-                'email' => 'Password reset is currently disabled. Please use a social login provider.'
+                'email' => 'Password reset is currently disabled. Please use a social login provider.',
             ]);
         }
 

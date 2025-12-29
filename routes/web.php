@@ -1,8 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,11 +10,11 @@ use App\Models\User;
 */
 
 Route::get('/', function () {
-  return view('welcome');
+    return view('welcome');
 });
 
 Route::get('/welcome', function () {
-  return view('welcome');
+    return view('welcome');
 });
 
 /*
@@ -25,8 +24,7 @@ Route::get('/welcome', function () {
 | Redirects to login or dashboard based on auth status
 */
 Route::get('/account', function () {
-  return auth()->check()
-    ? redirect()->route('dashboard')
-    : redirect()->route('login');
+    return auth()->check()
+      ? redirect()->route('dashboard')
+      : redirect()->route('login');
 })->name('account.index');
-

@@ -1,36 +1,34 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rules;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
 
-class NewPasswordController extends Controller
-{
+class NewPasswordController extends Controller {
     /**
      * Display the password reset view.
      */
-    public function create(Request $request): View
-    {
+    public function create(Request $request): View {
         return view('auth.reset-password', ['request' => $request]);
     }
 
     /**
      * Handle an incoming new password request.
      */
-    public function store(Request $request): RedirectResponse
-    {
+    public function store(Request $request): RedirectResponse {
         // Check if email login is enabled
-        if (!config('social.email_login_enabled', true)) {
+        if (! config('social.email_login_enabled', true)) {
             return back()->withErrors([
-                'email' => 'Password reset is currently disabled. Please use a social login provider.'
+                'email' => 'Password reset is currently disabled. Please use a social login provider.',
             ]);
         }
 

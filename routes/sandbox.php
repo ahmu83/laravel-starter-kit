@@ -14,20 +14,20 @@ use App\Http\Controllers\Sandbox\SandboxController;
 */
 
 Route::middleware(['web', 'basic.auth'])
-  ->prefix('sandbox')
-  ->name('sandbox.')
-  ->group(function () {
+    ->prefix('sandbox')
+    ->name('sandbox.')
+    ->group(function () {
 
-    // Public (within sandbox, but no sandbox.access)
-    Route::get('/', [SandboxController::class, 'index'])->name('index');
-    Route::get('/pages', [SandboxController::class, 'pages'])->name('pages');
-    Route::get('/ping', [SandboxController::class, 'ping'])->name('ping');
+        // Public (within sandbox, but no sandbox.access)
+        Route::get('/', [SandboxController::class, 'index'])->name('index');
+        Route::get('/pages', [SandboxController::class, 'pages'])->name('pages');
+        Route::get('/ping', [SandboxController::class, 'ping'])->name('ping');
 
-    Route::middleware(['sandbox.access:administrator'])->group(function () {
-      Route::get('/test', [SandboxController::class, 'test'])->name('test');
-      // Route::post('/reset', ...);
+        Route::middleware(['sandbox.access:administrator'])->group(function () {
+            Route::get('/test', [SandboxController::class, 'test'])->name('test');
+            // Route::post('/reset', ...);
+        });
+
+        Route::get('/test/proxied-url', [SandboxController::class, 'proxiedUrl'])->name('test.proxied-url');
+
     });
-
-    Route::get('/test/proxied-url', [SandboxController::class, 'proxiedUrl'])->name('test.proxied-url');
-
-  });

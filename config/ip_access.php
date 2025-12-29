@@ -2,7 +2,7 @@
 
 return [
 
-  /*
+    /*
   |--------------------------------------------------------------------------
   | Strict IP Allowlist (Exact Matches)
   |--------------------------------------------------------------------------
@@ -22,16 +22,15 @@ return [
   |
   */
 
-  'allowed_ipv4' => array_filter(
-    array_map('trim', explode(',', env('IP_ACCESS_ALLOWED_IPV4', '')))
-  ),
+    'allowed_ipv4' => array_filter(
+        array_map('trim', explode(',', env('IP_ACCESS_ALLOWED_IPV4', '')))
+    ),
 
-  'allowed_ipv6' => array_filter(
-    array_map('trim', explode(',', env('IP_ACCESS_ALLOWED_IPV6', '')))
-  ),
+    'allowed_ipv6' => array_filter(
+        array_map('trim', explode(',', env('IP_ACCESS_ALLOWED_IPV6', '')))
+    ),
 
-
-  /*
+    /*
   |--------------------------------------------------------------------------
   | Class / Network-Based IP Allowlist
   |--------------------------------------------------------------------------
@@ -62,13 +61,12 @@ return [
   |
   */
 
-  'allowed_ipv4_class' => array_filter(
-    array_map('trim', explode(',', env('IP_ACCESS_ALLOWED_IPV4_CLASS', '')))
-  ),
+    'allowed_ipv4_class' => array_filter(
+        array_map('trim', explode(',', env('IP_ACCESS_ALLOWED_IPV4_CLASS', '')))
+    ),
 
-  'allowed_ipv6_class' => array_filter(
-    array_map('trim', explode(',', env('IP_ACCESS_ALLOWED_IPV6_CLASS', '')))
-  ),
+    'allowed_ipv6_class' => array_filter(
+        array_map('trim', explode(',', env('IP_ACCESS_ALLOWED_IPV6_CLASS', '')))
+    ),
 
 ];
-

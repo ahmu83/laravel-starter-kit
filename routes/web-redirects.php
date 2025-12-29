@@ -12,6 +12,6 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware(['web'])->group(function () {
 
-  Route::permanentRedirect('/test-redirect', '/welcome');
+    Route::permanentRedirect('/test-redirect', '/welcome');
 
 });

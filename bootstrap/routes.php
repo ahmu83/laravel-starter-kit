@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 RateLimiter::for('api', function (Request $request) {
-  return Limit::perMinute(60)->by(
-    $request->user()?->id ?: $request->ip()
-  );
+    return Limit::perMinute(60)->by(
+        $request->user()?->id ?: $request->ip()
+    );
 });
 
 /*
@@ -29,5 +29,3 @@ require base_path('routes/toolbox.php');
 require base_path('routes/sandbox.php');
 require base_path('routes/webhooks.php');
 require base_path('routes/vendor-tools.php');
-
-

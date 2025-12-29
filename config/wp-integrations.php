@@ -1,7 +1,7 @@
 <?php
 
 return [
-  'controllers' => [
-    App\Http\Wp\AstraTheme::class,
-  ],
+    'controllers' => [
+        App\Http\Wp\AstraTheme::class,
+    ],
 ];

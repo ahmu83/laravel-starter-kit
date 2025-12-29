@@ -35,9 +35,6 @@ return [
         ],
     ],
 
-
-
-
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
@@ -79,6 +76,5 @@ return [
         'client_secret' => env('APPLE_CLIENT_SECRET'),
         'redirect' => env('APPLE_REDIRECT_URI'),
     ],
-
 
 ];

@@ -1,4 +1,5 @@
 <?php
+
 // config/social.php
 
 return [

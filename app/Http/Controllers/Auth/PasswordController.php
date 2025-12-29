@@ -2,19 +2,17 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rules\Password;
 
-class PasswordController extends Controller
-{
+class PasswordController extends Controller {
     /**
      * Update the user's password.
      */
-    public function update(Request $request): RedirectResponse
-    {
+    public function update(Request $request): RedirectResponse {
         abort(405);
         $validated = $request->validateWithBag('updatePassword', [
             'current_password' => ['required', 'current_password'],

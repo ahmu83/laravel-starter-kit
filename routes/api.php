@@ -21,33 +21,30 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/ping', function () {
-  return response()->json([
-    'status'    => 'ok',
-    'message'   => 'pong',
-    'timestamp' => now()->toISOString(),
-  ]);
+    return response()->json([
+        'status' => 'ok',
+        'message' => 'pong',
+        'timestamp' => now()->toISOString(),
+    ]);
 });
 
 Route::get('/test', function () {
-  return response()->json([
-    'status'    => 'success',
-    'message'   => 'API is working!',
-    'app'       => config('app.name'),
-    'env'       => config('app.env'),
-    'timestamp' => now()->toISOString(),
-  ]);
+    return response()->json([
+        'status' => 'success',
+        'message' => 'API is working!',
+        'app' => config('app.name'),
+        'env' => config('app.env'),
+        'timestamp' => now()->toISOString(),
+    ]);
 });
 
 Route::middleware('api.auth')->group(function () {
 
-  Route::get('/create-user-test', function (Request $request) {
-    return response()->json([
-      'status' => 'success',
-      'data'   => $request->user(),
-    ]);
-  });
+    Route::get('/create-user-test', function (Request $request) {
+        return response()->json([
+            'status' => 'success',
+            'data' => $request->user(),
+        ]);
+    });
 
 });
-
-
-

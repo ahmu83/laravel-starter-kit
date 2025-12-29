@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -45,44 +46,43 @@ use Symfony\Component\HttpFoundation\Response;
  * - Perform replay protection (timestamps, nonces, expiration)
  */
 class VerifyHmacSignature {
+    public function handle(
+        Request $request,
+        Closure $next,
+        string $secretConfigKey = 'api_keys.default',
+        string $headerName = 'X-API-Signature'
+    ): Response {
+        if (! $this->verifySignature($request, $secretConfigKey, $headerName)) {
+            return response()->json([
+                'error' => 'invalid-signature',
+                'message' => 'Invalid signature',
+            ], 401);
+        }
 
-  public function handle(
-    Request $request,
-    Closure $next,
-    string $secretConfigKey = 'api_keys.default',
-    string $headerName = 'X-API-Signature'
-  ): Response {
-    if (! $this->verifySignature($request, $secretConfigKey, $headerName)) {
-      return response()->json([
-        'error'   => 'invalid-signature',
-        'message' => 'Invalid signature',
-      ], 401);
+        return $next($request);
     }
 
-    return $next($request);
-  }
+    private function verifySignature(Request $request, string $secretConfigKey, string $headerName): bool {
+        $signature = trim((string) $request->header($headerName));
+        $signature = preg_replace('/^sha256=/i', '', $signature);
 
-  private function verifySignature(Request $request, string $secretConfigKey, string $headerName): bool {
-    $signature = trim((string) $request->header($headerName));
-    $signature = preg_replace('/^sha256=/i', '', $signature);
+        $secret = (string) config($secretConfigKey);
 
-    $secret = (string) config($secretConfigKey);
+        log_info('VerifyHmacSignature@verifySignature', [
+            '$request->header($headerName)' => $request->header($headerName),
+            '$signature' => $signature,
+            '$secret' => $secret,
+            '$secretConfigKey' => $secretConfigKey,
+            '$headerName' => $headerName,
+        ]);
 
-    log_info('VerifyHmacSignature@verifySignature', [
-      '$request->header($headerName)' => $request->header($headerName),
-      '$signature' => $signature,
-      '$secret' => $secret,
-      '$secretConfigKey' => $secretConfigKey,
-      '$headerName' => $headerName,
-    ]);
+        if ($secret === '' || $signature === '') {
+            return false;
+        }
 
-    if ($secret === '' || $signature === '') {
-      return false;
+        $payload = $request->getContent();
+        $expected = hash_hmac('sha256', $payload, $secret);
+
+        return hash_equals($expected, $signature);
     }
-
-    $payload  = $request->getContent();
-    $expected = hash_hmac('sha256', $payload, $secret);
-
-    return hash_equals($expected, $signature);
-  }
 }

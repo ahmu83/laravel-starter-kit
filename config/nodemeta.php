@@ -1,7 +1,7 @@
 <?php
 
 return [
-  /*
+    /*
   |--------------------------------------------------------------------------
   | Node Meta Types
   |--------------------------------------------------------------------------
@@ -10,7 +10,7 @@ return [
   | These represent different entity types that can have metadata attached.
   |
   */
-  'meta_types' => [
-    'users',
-  ],
+    'meta_types' => [
+        'users',
+    ],
 ];

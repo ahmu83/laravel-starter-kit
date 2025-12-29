@@ -18,13 +18,13 @@ use App\Http\Controllers\Webhook\WpUserWebhookController;
 Route::prefix('webhook')->middleware(['webhook.signature'])->group(function () {
 
     Route::get('/test', function (Request $request) {
-      return response()->json([
-        'status' => 'success',
-        'message' => 'Webhook received',
-        'headers' => $request->headers->all(),
-        'payload' => $request->all(),
-        'timestamp' => now()->toISOString(),
-      ]);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Webhook received',
+            'headers' => $request->headers->all(),
+            'payload' => $request->all(),
+            'timestamp' => now()->toISOString(),
+        ]);
     })->name('webhook.test');
 
     /*
@@ -33,14 +33,14 @@ Route::prefix('webhook')->middleware(['webhook.signature'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::post('/wp/user-event', [WpUserWebhookController::class, 'handle'])
-      ->withoutMiddleware('webhook.signature')
-      ->middleware(['webhook.signature:api_keys.webhook_wp_event'])
-      ->name('webhook.wp.user_event');
+        ->withoutMiddleware('webhook.signature')
+        ->middleware(['webhook.signature:api_keys.webhook_wp_event'])
+        ->name('webhook.wp.user_event');
 
     // Test route (still protected by group-level secret)
     Route::get('/test', [WpUserWebhookController::class, 'test'])
-      ->withoutMiddleware('webhook.signature')
-      ->middleware('webhook.signature:api_keys.webhook_wp_event')
-      ->name('webhook.test');
+        ->withoutMiddleware('webhook.signature')
+        ->middleware('webhook.signature:api_keys.webhook_wp_event')
+        ->name('webhook.test');
 
-  });
+});
